@@ -1,0 +1,15 @@
+# Root Cargo.toml
+[workspace]
+members = [
+    "core",
+    "uast",
+    "parser",
+    "languages/c_sharp",
+    "cli",
+]
+
+[workspace.dependencies]
+tree-sitter = "0.20"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
+rayon = "1.7"
