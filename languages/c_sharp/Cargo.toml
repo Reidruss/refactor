@@ -4,3 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+uast = { path = "../../uast" }
+tree-sitter = { workspace = true }
+
+[dev-dependencies]
+parser = { path = "../../parser" }
+tree-sitter-c-sharp = "0.20"

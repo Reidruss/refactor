@@ -4,7 +4,7 @@ members = [
     "core",
     "uast",
     "parser",
-    "languages/c_sharp/src",
+    "languages/c_sharp",
     "cli",
 ]
 
