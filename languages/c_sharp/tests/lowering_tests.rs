@@ -1,32 +1,143 @@
 use c_sharp::lower_statement;
 use parser::GenericParser;
-use uast::Statement;
+use uast::{Expression, Span, Statement};
 
 #[test]
 fn test_lower_variable_declaration() {
-    // 1. Setup the C# Parser
-    // We use the raw tree-sitter-c-sharp language definition here
+    let language: tree_sitter::Language = tree_sitter_c_sharp::language();
+    let mut parser: GenericParser = GenericParser::new(language);
+
+    let code: &str = "double i = 5.0;";
+    let tree: tree_sitter::Tree = parser.parse(code);
+
+    let root: tree_sitter::Node<'_> = tree.root_node();
+    let first_node: tree_sitter::Node<'_> = root.child(0).expect("Code should have one child");
+
+    let result: Statement = lower_statement(first_node, code.as_bytes());
+
+    if let Statement::VarDecl(decl) = result {
+        assert_eq!(decl.name, "i");
+
+        assert_eq!(decl.var_type, Some("double".to_string()));
+
+        assert_eq!(
+            decl.value,
+            Some(Box::new(Expression::Raw {
+                source: "5.0".to_string(),
+                span: Span { start: 11, end: 14 }
+            }))
+        );
+
+        assert_eq!(decl.span.start, 0);
+
+        assert_eq!(decl.span.end, 14);
+    } else {
+        panic!("Expected a VarDecl, but got {:?}", result);
+    }
+}
+
+#[test]
+fn test_lower_if_statement() {
     let language = tree_sitter_c_sharp::language();
     let mut parser = GenericParser::new(language);
 
-    // 2. Parse a simple string
-    let code = "int x = 5;";
+    let code = "if (true) { int x = 1; }";
+    let tree = parser.parse(code);
+    let root = tree.root_node();
+    let if_node = root.child(0).expect("Code should have an if statement");
+
+    let result = lower_statement(if_node, code.as_bytes());
+
+    if let Statement::IfStatement(if_stmt) = result {
+        assert_eq!(
+            if_stmt.condition,
+            Box::new(Expression::Raw {
+                source: "true".to_string(),
+                span: Span { start: 4, end: 8 } // Span for 'true'
+            })
+        );
+        assert_eq!(if_stmt.alternative, None);
+        assert_eq!(if_stmt.span.start, 0);
+        assert_eq!(if_stmt.span.end, 24); // Span for "if (true) { int x = 1; }"
+
+        // Verify the consequence block
+        assert_eq!(if_stmt.consequence.statements.len(), 1);
+        if let Statement::VarDecl(var_decl) = &if_stmt.consequence.statements[0] {
+            assert_eq!(var_decl.name, "x");
+            assert_eq!(var_decl.var_type, Some("int".to_string()));
+            assert_eq!(
+                var_decl.value,
+                Some(Box::new(Expression::Raw {
+                    source: "1".to_string(),
+                    span: Span { start: 20, end: 21 } // Span for '1'
+                }))
+            );
+        } else {
+            panic!("Expected VarDecl in if consequence, got {:?}", if_stmt.consequence.statements[0]);
+        }
+    } else {
+        panic!("Expected IfStatement, got {:?}", result);
+    }
+}
+
+#[test]
+fn test_lower_if_else_statement() {
+    let language = tree_sitter_c_sharp::language();
+    let mut parser = GenericParser::new(language);
+    let code = "if (false) { int y = 2; } else { int z = 3; }";
     let tree = parser.parse(code);
 
-    // 3. Extract the specific node we want to test
-    // root_node() is the file; child(0) is the first statement
     let root = tree.root_node();
-    let first_node = root.child(0).expect("Code should have one child");
+    let if_else_node = root.child(0).expect("Code should have an if-else statement");
 
-    // 4. Run your lowering logic
-    let result = lower_statement(first_node, code.as_bytes());
+    let result = lower_statement(if_else_node, code.as_bytes());
 
-    // 5. Verify the result using pattern matching
-    if let Statement::VarDecl(decl) = result {
-        assert_eq!(decl.name, "extracted_name"); // Matches the placeholder logic from before
-        assert_eq!(decl.span.start, 0);
-        assert_eq!(decl.span.end, 9);
+    if let Statement::IfStatement(if_stmt) = result {
+        assert_eq!(
+            if_stmt.condition,
+            Box::new(Expression::Raw {
+                source: "false".to_string(),
+                span: Span { start: 4, end: 9 } // Span for 'false'
+            })
+        );
+        assert_eq!(if_stmt.span.start, 0);
+        assert_eq!(if_stmt.span.end, 45); // Span for "if (false) { int y = 2; } else { int z = 3; }"
+
+        // Verify the consequence block
+        assert_eq!(if_stmt.consequence.statements.len(), 1);
+        if let Statement::VarDecl(var_decl) = &if_stmt.consequence.statements[0] {
+            assert_eq!(var_decl.name, "y");
+            assert_eq!(var_decl.var_type, Some("int".to_string()));
+            assert_eq!(
+                var_decl.value,
+                Some(Box::new(Expression::Raw {
+                    source: "2".to_string(),
+                    span: Span { start: 21, end: 22 } // Span for '2'
+                }))
+            );
+        } else {
+            panic!("Expected VarDecl in if consequence, got {:?}", if_stmt.consequence.statements[0]);
+        }
+
+        // Verify the alternative block
+        assert!(if_stmt.alternative.is_some());
+        if let Some(alt_block) = if_stmt.alternative {
+            assert_eq!(alt_block.statements.len(), 1);
+            if let Statement::VarDecl(var_decl) = &alt_block.statements[0] {
+                assert_eq!(var_decl.name, "z");
+                assert_eq!(var_decl.var_type, Some("int".to_string()));
+                assert_eq!(
+                    var_decl.value,
+                    Some(Box::new(Expression::Raw {
+                        source: "3".to_string(),
+                        span: Span { start: 41, end: 42 } // Span for '3'
+                    }))
+                );
+            } else {
+                panic!("Expected VarDecl in else alternative, got {:?}", alt_block.statements[0]);
+            }
+        }
     } else {
-        panic!("Expected a VarDecl, but got {:?}", result);
+        panic!("Expected IfStatement, got {:?}", result);
     }
 }

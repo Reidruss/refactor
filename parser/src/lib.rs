@@ -1,4 +1,4 @@
-use tree_sitter::{Parser, Tree, Language};
+use tree_sitter::{Language, Parser, Tree};
 
 pub struct GenericParser {
     inner: Parser,
