@@ -1,9 +1,23 @@
 use tree_sitter::Node;
-use uast::{Block, Expression, IfStatement, Span, Statement, VarDecl};
+use uast::{Block, DeclStmt, Expression, IfStatement, Span, Statement, VarDecl};
+
+fn extract_modifiers(node: Node, source: &[u8]) -> Option<Vec<String>> {
+    let mut modifiers = Vec::new();
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if child.kind() == "modifier" {
+            if let Ok(text) = child.utf8_text(source) {
+                modifiers.push(text.to_string());
+            }
+        }
+    }
+
+    Some(modifiers)
+}
 
 pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
     match node.kind() {
-        "global_statement" | "local_declaration_statement" => {
+        "global_statement" => {
             if let Some(child) = node.named_child(0) {
                 lower_statement(child, source)
             } else {
@@ -17,48 +31,72 @@ pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
                 }
             }
         }
-        "variable_declaration" => {
-            // TODO: Correctly handle modifiers
-            let variable_declarator_node = node
-                .named_child(1)
-                .expect("Expected a variable_declarator child for variable_declaration");
+        "local_declaration_statement" => {
+            let modifiers = extract_modifiers(node, source);
 
-            let identifier_node = variable_declarator_node
-                .named_child(0)
-                .expect("Expected an identifier child for variable_declarator");
+            let mut cursor = node.walk();
 
-            let name = identifier_node.utf8_text(source).unwrap().to_string();
-
-            let type_node = node
-                .named_child(0)
-                .expect("Expected a type child for variable_declaration");
-            let var_type = Some(type_node.utf8_text(source).unwrap().to_string());
-
-            let mut value: Option<Box<Expression>> = None;
-            if let Some(equals_value_clause_node) = variable_declarator_node.named_child(1) {
-                if equals_value_clause_node.kind() == "equals_value_clause" {
-                    if let Some(literal_node) = equals_value_clause_node.named_child(0) {
-                        value = Some(Box::new(Expression::Raw {
-                            source: literal_node.utf8_text(source).unwrap().to_string(),
-                            span: Span {
-                                start: literal_node.start_byte(),
-                                end: literal_node.end_byte(),
-                            },
-                        }));
-                    }
+            let mut variable_decl_node = None;
+            for child in node.children(&mut cursor) {
+                if child.kind() == "variable_declaration" {
+                    variable_decl_node = Some(child);
+                    break;
                 }
             }
 
-            Statement::VarDecl(VarDecl {
-                name,
-                modifiers: None,
-                var_type,
-                value,
-                span: Span {
-                    start: node.start_byte(),
-                    end: node.end_byte(),
-                },
-            })
+            if let Some(node) = variable_decl_node {
+                 let type_node = node
+                    .named_child(0)
+                    .expect("Expected a type child for variable_declaration");
+                let var_type = Some(type_node.utf8_text(source).unwrap().to_string());
+
+                let variable_declarator_node = node
+                    .named_child(1)
+                    .expect("Expected a variable_declarator child for variable_declaration");
+
+                let identifier_node = variable_declarator_node
+                    .named_child(0)
+                    .expect("Expected an identifier child for variable_declarator");
+
+                let name = identifier_node.utf8_text(source).unwrap().to_string();
+
+                let mut value: Option<Box<Expression>> = None;
+                if let Some(equals_value_clause_node) = variable_declarator_node.named_child(1) {
+                    if equals_value_clause_node.kind() == "equals_value_clause" {
+                        if let Some(literal_node) = equals_value_clause_node.named_child(0) {
+                            value = Some(Box::new(Expression::Raw {
+                                source: literal_node.utf8_text(source).unwrap().to_string(),
+                                span: Span {
+                                    start: literal_node.start_byte(),
+                                    end: literal_node.end_byte(),
+                                },
+                            }));
+                        }
+                    }
+                }
+
+                Statement::DeclStmt(DeclStmt {
+                    modifiers,
+                    var_decl: VarDecl {
+                        name,
+                        modifiers: None,
+                        var_type,
+                        value,
+                        span: Span {
+                            start: node.start_byte(),
+                            end: node.end_byte(),
+                        },
+                    },
+                })
+            } else {
+                Statement::Unknown {
+                    source: node.utf8_text(source).unwrap().to_string(),
+                    span: Span {
+                        start: node.start_byte(),
+                        end: node.end_byte(),
+                    },
+                }
+            }
         }
         "if_statement" => {
             let condition_node = node

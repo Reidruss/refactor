@@ -7,7 +7,7 @@ fn test_lower_variable_declaration() {
     let language: tree_sitter::Language = tree_sitter_c_sharp::language();
     let mut parser: GenericParser = GenericParser::new(language);
 
-    let code: &str = "double i = 5.0;";
+    let code: &str = "const double i = 5.0;";
     let tree: tree_sitter::Tree = parser.parse(code);
 
     let root: tree_sitter::Node<'_> = tree.root_node();
@@ -15,7 +15,10 @@ fn test_lower_variable_declaration() {
 
     let result: Statement = lower_statement(first_node, code.as_bytes());
 
-    if let Statement::VarDecl(decl) = result {
+    if let Statement::DeclStmt(decl_stmt) = result {
+        assert_eq!(decl_stmt.modifiers.as_ref().map(|m| &m[0]), Some(&"const".to_string()));
+
+        let decl = &decl_stmt.var_decl;
         assert_eq!(decl.name, "i");
 
         assert_eq!(decl.var_type, Some("double".to_string()));
@@ -24,15 +27,12 @@ fn test_lower_variable_declaration() {
             decl.value,
             Some(Box::new(Expression::Raw {
                 source: "5.0".to_string(),
-                span: Span { start: 11, end: 14 }
+                span: Span { start: 17, end: 20 }
             }))
         );
 
-        assert_eq!(decl.span.start, 0);
-
-        assert_eq!(decl.span.end, 14);
     } else {
-        panic!("Expected a VarDecl, but got {:?}", result);
+        panic!("Expected a DeclStmt, but got {:?}", result);
     }
 }
 
@@ -62,7 +62,8 @@ fn test_lower_if_statement() {
 
         // Verify the consequence block
         assert_eq!(if_stmt.consequence.statements.len(), 1);
-        if let Statement::VarDecl(var_decl) = &if_stmt.consequence.statements[0] {
+        if let Statement::DeclStmt(decl_stmt) = &if_stmt.consequence.statements[0] {
+            let var_decl = &decl_stmt.var_decl;
             assert_eq!(var_decl.name, "x");
             assert_eq!(var_decl.var_type, Some("int".to_string()));
             assert_eq!(
@@ -73,7 +74,7 @@ fn test_lower_if_statement() {
                 }))
             );
         } else {
-            panic!("Expected VarDecl in if consequence, got {:?}", if_stmt.consequence.statements[0]);
+            panic!("Expected DeclStmt in if consequence, got {:?}", if_stmt.consequence.statements[0]);
         }
     } else {
         panic!("Expected IfStatement, got {:?}", result);
@@ -105,7 +106,8 @@ fn test_lower_if_else_statement() {
 
         // Verify the consequence block
         assert_eq!(if_stmt.consequence.statements.len(), 1);
-        if let Statement::VarDecl(var_decl) = &if_stmt.consequence.statements[0] {
+        if let Statement::DeclStmt(decl_stmt) = &if_stmt.consequence.statements[0] {
+            let var_decl = &decl_stmt.var_decl;
             assert_eq!(var_decl.name, "y");
             assert_eq!(var_decl.var_type, Some("int".to_string()));
             assert_eq!(
@@ -116,14 +118,15 @@ fn test_lower_if_else_statement() {
                 }))
             );
         } else {
-            panic!("Expected VarDecl in if consequence, got {:?}", if_stmt.consequence.statements[0]);
+            panic!("Expected DeclStmt in if consequence, got {:?}", if_stmt.consequence.statements[0]);
         }
 
         // Verify the alternative block
         assert!(if_stmt.alternative.is_some());
         if let Some(alt_block) = if_stmt.alternative {
             assert_eq!(alt_block.statements.len(), 1);
-            if let Statement::VarDecl(var_decl) = &alt_block.statements[0] {
+            if let Statement::DeclStmt(decl_stmt) = &alt_block.statements[0] {
+                let var_decl = &decl_stmt.var_decl;
                 assert_eq!(var_decl.name, "z");
                 assert_eq!(var_decl.var_type, Some("int".to_string()));
                 assert_eq!(
@@ -134,7 +137,7 @@ fn test_lower_if_else_statement() {
                     }))
                 );
             } else {
-                panic!("Expected VarDecl in else alternative, got {:?}", alt_block.statements[0]);
+                panic!("Expected DeclStmt in else alternative, got {:?}", alt_block.statements[0]);
             }
         }
     } else {

@@ -14,7 +14,7 @@ pub struct Block {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Statement {
-    VarDecl(VarDecl),
+    DeclStmt(DeclStmt),
     IfStatement(IfStatement),
     Unknown { source: String, span: Span },
 }
@@ -44,6 +44,12 @@ pub struct VarDecl {
     pub var_type: Option<String>,
     pub name: String,
     pub value: Option<Box<Expression>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DeclStmt {
+    pub modifiers : Option<Vec<String>>,
+    pub var_decl : VarDecl,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
