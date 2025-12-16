@@ -147,10 +147,15 @@ pub struct DeclStmt {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ReturnStatement {
-    // Need to somehow store the type
-    // Temporary but could work
     pub return_type: ReturnType,
     pub value: String,
+}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ExpressionStatement {
+    pub expression: Box<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -158,10 +163,10 @@ pub enum Statement {
     DeclStmt(DeclStmt),
     IfStatement(IfStatement),
     Unknown { source: String, span: Span },
-    WhileLoop(WhileLoop), // Added this
-    ForLoop(ForLoop),     // Added this
-    ReturnStatement(ReturnStatement), // Added this
-    // TODO: Implement ExpressionStatement
+    WhileLoop(WhileLoop),
+    ForLoop(ForLoop),
+    ReturnStatement(ReturnStatement),
+    ExpressionStatement(ExpressionStatement),
 }
 
 // --- Top-Level Declarations ---
