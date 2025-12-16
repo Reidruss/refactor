@@ -45,9 +45,10 @@ pub struct IfStatement {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BinaryOperator {
-    Add, Sub, Mul, Div, Equal, NotEqual,
-    GreaterThan, LessThan, GreaterThanEq,
-    LessThanEQ,
+    Add, Sub, Mul, Div,
+    Equal, NotEqual,
+    GreaterThan, LessThan,
+    GreaterThanEqual, LessThanEqual,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -82,7 +83,6 @@ pub struct BinaryOp {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Expression {
-    // TODO: Expand to support Literals, Binary Operations, and Identifiers
     Identifier(String),
     Literal(Literal),
     BinaryOp(BinaryOp),
@@ -90,11 +90,6 @@ pub enum Expression {
         source: String,
         span: Span
     },
-    Literals {
-
-    },
-
-
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -125,8 +120,6 @@ pub struct ReturnStatement {
 }
 
 // TODO: Implement ExpressionStatement
-
-
 
 // TODO: Implement WhileLoop
 
