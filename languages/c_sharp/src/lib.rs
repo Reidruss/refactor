@@ -164,3 +164,13 @@ pub fn lower_block(node: Node, source: &[u8]) -> Block {
 }
 
 // TODO: Implemnt fn lower_expression to recursively parse expresions
+pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
+
+    Expression::Raw {
+        source: "".to_string(),
+        span: Span {
+            start: node.start_byte(),
+            end: node.end_byte(),
+        },
+    }
+}

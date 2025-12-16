@@ -1,6 +1,29 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum Statement {
+    DeclStmt(DeclStmt),
+    IfStatement(IfStatement),
+    Unknown { source: String, span: Span },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ReturnType {
+    IntegerLiteral,
+    RealLiteral,
+    Identifier,
+    CharacterLiteral,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum Literal {
+    Integer(i64),
+    Float(f64),
+    String(String),
+    Boolean(bool),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
@@ -13,13 +36,6 @@ pub struct Block {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum Statement {
-    DeclStmt(DeclStmt),
-    IfStatement(IfStatement),
-    Unknown { source: String, span: Span },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IfStatement {
     pub condition: Box<Expression>,
     pub consequence: Box<Block>,
@@ -28,12 +44,56 @@ pub struct IfStatement {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum BinaryOperator {
+    Add, Sub, Mul, Div, Equal, NotEqual,
+    GreaterThan, LessThan, GreaterThanEq,
+    LessThanEQ,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ArithmeticOperator {
+    Add, Sub, Mul, Div, Mod
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ComparisonOperator {
+    Equal, NotEqual,
+    GreaterThan, LessThan,
+    GreaterThanEqual, LessThanEqual
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum LogicalOperator {
+    And, Or, Xor, CondAnd, CondOr
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum BitwiseOperator {
+    And, Or, Xor, LeftShift, RightShift, UnsignedRightShift
+}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BinaryOp {
+    pub left: Box<Expression>,
+    pub operator: BinaryOperator,
+    pub right: Box<Expression>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Expression {
     // TODO: Expand to support Literals, Binary Operations, and Identifiers
+    Identifier(String),
+    Literal(Literal),
+    BinaryOp(BinaryOp),
     Raw {
         source: String,
         span: Span
     },
+    Literals {
+
+    },
+
 
 }
 
@@ -57,10 +117,16 @@ pub struct FunctionDecl {
     pub name: String,
 }
 
-
-// TODO: Implement ReturnStatement
+pub struct ReturnStatement {
+    // Need to somehow store the type
+    // Temporary but could work
+    pub return_type: ReturnType,
+    pub value: String,
+}
 
 // TODO: Implement ExpressionStatement
+
+
 
 // TODO: Implement WhileLoop
 
