@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 // --- Core Primitives ---
+pub type Metadata = HashMap<String, String>;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Span {
     pub start: usize,
@@ -147,8 +150,8 @@ pub struct DeclStmt {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ReturnStatement {
-    pub return_type: ReturnType,
-    pub value: String,
+    // Need to somehow store the type if inferred, or just rely on value expression
+    pub value: Option<Box<Expression>>, 
 }
 
 
@@ -171,14 +174,47 @@ pub enum Statement {
 
 // --- Top-Level Declarations ---
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct FunctionDecl {
-    pub name: String,
+pub enum TopLevel {
+    Class(ClassDef),
+    Function(FunctionDef),
+    Module(ModuleDef),
+    Statement(Statement),
+    Unknown { source: String, span: Span },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum ReturnType {
-    IntegerLiteral,
-    RealLiteral,
-    Identifier,
-    CharacterLiteral,
+pub struct ClassDef {
+    pub name: String,
+    pub span: Span,
+    pub body: Vec<TopLevel>,
+    pub modifiers: Vec<String>,
+    pub annotations: Vec<Annotation>,
+    pub metadata: Metadata,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FunctionDef {
+    pub name: String,
+    pub span: Span,
+    pub body: Block,
+    pub modifiers: Vec<String>,
+    pub parameters: Vec<VarDecl>,
+    pub return_type: Option<String>,
+    pub annotations: Vec<Annotation>,
+    pub metadata: Metadata,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ModuleDef {
+    pub name: String,
+    pub body: Vec<TopLevel>,
+    pub span: Span,
+    pub metadata: Metadata,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Annotation {
+    pub name: String,
+    pub arguments: Vec<Expression>,
+    pub span: Span,
 }
