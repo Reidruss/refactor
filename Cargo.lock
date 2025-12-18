@@ -34,10 +34,20 @@ dependencies = [
 [[package]]
 name = "cli"
 version = "0.1.0"
+dependencies = [
+ "c_sharp",
+ "core",
+ "tree-sitter",
+ "tree-sitter-c-sharp",
+ "uast",
+]
 
 [[package]]
 name = "core"
 version = "0.1.0"
+dependencies = [
+ "uast",
+]
 
 [[package]]
 name = "find-msvc-tools"

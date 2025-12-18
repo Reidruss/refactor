@@ -19,7 +19,7 @@ fn extract_modifiers(node: Node, source: &[u8]) -> Option<Vec<String>> {
 
 fn extract_parameters(node: Node, source: &[u8]) -> Option<Vec<VarDecl>> {
     let mut parameters = Vec::new();
-    
+
     if let Some(param_list) = node.child_by_field_name("parameters") {
         let mut cursor = param_list.walk();
         for child in param_list.children(&mut cursor) {
@@ -281,7 +281,7 @@ pub fn lower_top_level(node: Node, source: &[u8]) -> TopLevel {
                 .to_string();
 
             let mut top_levels: Vec<TopLevel> = vec![];
-            
+
             if let Some(body_node) = node.child_by_field_name("body") {
                 let mut cursor = body_node.walk();
                 for child in body_node.children(&mut cursor) {
@@ -314,13 +314,15 @@ pub fn lower_top_level(node: Node, source: &[u8]) -> TopLevel {
                 .unwrap()
                 .to_string();
 
-            let return_type_node = node.child_by_field_name("type").expect("unable to find return type");
+            let return_type_node = node
+                .child_by_field_name("type")
+                .expect("unable to find return type");
             let return_type_str = return_type_node.utf8_text(source).unwrap().to_string();
 
             let mut body_parts: Vec<FunctionBody> = vec![];
-            
+
             if let Some(body_node) = node.child_by_field_name("body") {
-                 body_parts.push(FunctionBody::Block(lower_block(body_node, source)));
+                body_parts.push(FunctionBody::Block(lower_block(body_node, source)));
             }
 
             let modifiers: Option<Vec<String>> = extract_modifiers(node, source);

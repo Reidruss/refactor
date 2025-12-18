@@ -29,7 +29,7 @@ impl CSharpCodeGenerator {
 
     fn generate_class(&mut self, class_def: &ClassDef) -> String {
         let mut output = String::new();
-        
+
         // Modifiers
         if let Some(modifiers) = &class_def.modifiers {
             output.push_str(&modifiers.join(" "));
@@ -90,15 +90,15 @@ impl CSharpCodeGenerator {
 
         if let Some(body) = &func_def.body {
             for item in body {
-                 match item {
-                     FunctionBody::Block(block) => output.push_str(&self.generate_block(block)),
-                     FunctionBody::TopLevel(tl) => output.push_str(&self.generate(tl)), // Should not happen for methods usually
-                     FunctionBody::Expression(expr) => {
-                         output.push_str(" => ");
-                         output.push_str(&self.generate_expression(expr));
-                         output.push(';');
-                     }
-                 }
+                match item {
+                    FunctionBody::Block(block) => output.push_str(&self.generate_block(block)),
+                    FunctionBody::TopLevel(tl) => output.push_str(&self.generate(tl)), // Should not happen for methods usually
+                    FunctionBody::Expression(expr) => {
+                        output.push_str(" => ");
+                        output.push_str(&self.generate_expression(expr));
+                        output.push(';');
+                    }
+                }
             }
         } else {
             output.push(';');
@@ -127,12 +127,12 @@ impl CSharpCodeGenerator {
             Statement::DeclStmt(decl) => {
                 let mut output = String::new();
                 let v = &decl.var_decl;
-                
+
                 if let Some(modifiers) = &decl.modifiers {
-                     if !modifiers.is_empty() {
+                    if !modifiers.is_empty() {
                         output.push_str(&modifiers.join(" "));
                         output.push(' ');
-                     }
+                    }
                 }
 
                 if let Some(t) = &v.var_type {
@@ -165,18 +165,18 @@ impl CSharpCodeGenerator {
                 output.push_str(&self.generate_expression(&if_stmt.condition));
                 output.push_str(") ");
                 output.push_str(&self.generate_block(&if_stmt.consequence));
-                
+
                 if let Some(alt) = &if_stmt.alternative {
                     output.push_str(" else ");
                     output.push_str(&self.generate_block(alt));
                 }
                 output
             }
-             Statement::ExpressionStatement(expr_stmt) => {
-                 let mut output = self.generate_expression(&expr_stmt.expression);
-                 output.push(';');
-                 output
-             }
+            Statement::ExpressionStatement(expr_stmt) => {
+                let mut output = self.generate_expression(&expr_stmt.expression);
+                output.push(';');
+                output
+            }
             Statement::Unknown { source, .. } => source.clone(),
             _ => format!("/* Unimplemented Statement: {:?} */", stmt),
         }
@@ -207,8 +207,8 @@ impl CSharpCodeGenerator {
                     BinaryOperator::LessThanEqual => "<=",
                 };
                 format!("{} {} {}", left, operator, right)
-            },
-             Expression::Assignment(assign) => {
+            }
+            Expression::Assignment(assign) => {
                 let left = self.generate_expression(&assign.left);
                 let right = self.generate_expression(&assign.right);
                 let op = match assign.operator {
@@ -218,8 +218,8 @@ impl CSharpCodeGenerator {
                     AssignmentOperator::MulAssign => "*=",
                     AssignmentOperator::DivAssign => "/=",
                 };
-                 format!("{} {} {}", left, op, right)
-             },
+                format!("{} {} {}", left, op, right)
+            }
             Expression::Raw { source, .. } => source.clone(),
             _ => format!("/* Unimplemented Expr: {:?} */", expr),
         }

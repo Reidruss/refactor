@@ -2,69 +2,20 @@ warning: virtual workspace defaulting to `resolver = "1"` despite one or more wo
 note: to keep the current resolver, specify `workspace.resolver = "1"` in the workspace root's manifest
 note: to use the edition 2021 resolver, specify `workspace.resolver = "2"` in the workspace root's manifest
 note: for more details see https://doc.rust-lang.org/cargo/reference/resolver.html#resolver-versions
-   0.022441130s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="c_sharp"}: cargo::core::compiler::fingerprint: stale: changed "/home/reidruss/code/repos/refactor/uast/src/lib.rs"
-   0.022454543s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="c_sharp"}: cargo::core::compiler::fingerprint:           (vs) "/home/reidruss/code/repos/refactor/target/debug/.fingerprint/uast-cdd875a2a46506b5/dep-lib-uast"
-   0.022462394s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="c_sharp"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1766098020, nanos: 162429306 } < FileTime { seconds: 1766098970, nanos: 637067840 }
-   0.022514981s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="c_sharp"}: cargo::core::compiler::fingerprint: fingerprint dirty for c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp)/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("c_sharp", ["lib"], "/home/reidruss/code/repos/refactor/languages/c_sharp/src/lib.rs", Edition2021) }
-   0.022524954s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="c_sharp"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "uast" })
-   0.022940780s  INFO prepare_target{force=false package_id=uast v0.1.0 (/home/reidruss/code/repos/refactor/uast) target="uast"}: cargo::core::compiler::fingerprint: fingerprint dirty for uast v0.1.0 (/home/reidruss/code/repos/refactor/uast)/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("uast", ["lib"], "/home/reidruss/code/repos/refactor/uast/src/lib.rs", Edition2021) }
-   0.022954171s  INFO prepare_target{force=false package_id=uast v0.1.0 (/home/reidruss/code/repos/refactor/uast) target="uast"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/home/reidruss/code/repos/refactor/target/debug/.fingerprint/uast-cdd875a2a46506b5/dep-lib-uast", reference_mtime: FileTime { seconds: 1766098020, nanos: 162429306 }, stale: "/home/reidruss/code/repos/refactor/uast/src/lib.rs", stale_mtime: FileTime { seconds: 1766098970, nanos: 637067840 } }))
-   0.023518611s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="c_sharp"}: cargo::core::compiler::fingerprint: fingerprint dirty for c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("c_sharp", ["lib"], "/home/reidruss/code/repos/refactor/languages/c_sharp/src/lib.rs", Edition2021) }
-   0.023527170s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="c_sharp"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "uast" })
-   0.023807967s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="expression_tests"}: cargo::core::compiler::fingerprint: fingerprint dirty for c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp)/Check { test: true }/TargetInner { kind: "test", name: "expression_tests", benched: false, ..: with_path("/home/reidruss/code/repos/refactor/languages/c_sharp/tests/expression_tests.rs", Edition2021) }
-   0.023816335s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="expression_tests"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "c_sharp" })
-   0.024012187s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="lowering_tests"}: cargo::core::compiler::fingerprint: fingerprint dirty for c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp)/Check { test: true }/TargetInner { kind: "test", name: "lowering_tests", benched: false, ..: with_path("/home/reidruss/code/repos/refactor/languages/c_sharp/tests/lowering_tests.rs", Edition2021) }
-   0.024019651s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="lowering_tests"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "c_sharp" })
-   0.024345914s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="top_level_tests"}: cargo::core::compiler::fingerprint: fingerprint error for c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp)/Check { test: true }/TargetInner { kind: "test", name: "top_level_tests", benched: false, ..: with_path("/home/reidruss/code/repos/refactor/languages/c_sharp/tests/top_level_tests.rs", Edition2021) }
-   0.024352887s  INFO prepare_target{force=false package_id=c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp) target="top_level_tests"}: cargo::core::compiler::fingerprint:     err: failed to read `/home/reidruss/code/repos/refactor/target/debug/.fingerprint/c_sharp-cda04541d1736c26/test-integration-test-top_level_tests`
-
-Caused by:
-    No such file or directory (os error 2)
-
-Stack backtrace:
-   0: cargo_util::paths::read_bytes
-   1: cargo_util::paths::read
-   2: cargo::core::compiler::fingerprint::_compare_old_fingerprint
-   3: cargo::core::compiler::fingerprint::prepare_target
-   4: cargo::core::compiler::compile
-   5: <cargo::core::compiler::build_runner::BuildRunner>::compile
-   6: cargo::ops::cargo_compile::compile_ws
-   7: cargo::ops::cargo_compile::compile_with_exec
-   8: cargo::ops::cargo_compile::compile
-   9: cargo::commands::check::exec
-  10: <cargo::cli::Exec>::exec
-  11: cargo::main
-  12: std::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
-  13: std::rt::lang_start::<()>::{closure#0}
-  14: core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/core/src/ops/function.rs:287:21
-  15: std::panicking::catch_unwind::do_call
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/std/src/panicking.rs:590:40
-  16: std::panicking::catch_unwind
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/std/src/panicking.rs:553:19
-  17: std::panic::catch_unwind
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/std/src/panic.rs:359:14
-  18: std::rt::lang_start_internal::{{closure}}
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/std/src/rt.rs:175:24
-  19: std::panicking::catch_unwind::do_call
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/std/src/panicking.rs:590:40
-  20: std::panicking::catch_unwind
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/std/src/panicking.rs:553:19
-  21: std::panic::catch_unwind
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/std/src/panic.rs:359:14
-  22: std::rt::lang_start_internal
-             at /rustc/ed61e7d7e242494fb7057f2657300d9e77bb4fcb/library/std/src/rt.rs:171:5
-  23: main
-  24: __libc_start_call_main
-             at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
-  25: __libc_start_main_impl
-             at ./csu/../csu/libc-start.c:360:3
-  26: <unknown>
-   0.096075817s  INFO prepare_target{force=false package_id=uast v0.1.0 (/home/reidruss/code/repos/refactor/uast) target="uast"}: cargo::core::compiler::fingerprint: stale: changed "/home/reidruss/code/repos/refactor/uast/src/lib.rs"
-   0.096087306s  INFO prepare_target{force=false package_id=uast v0.1.0 (/home/reidruss/code/repos/refactor/uast) target="uast"}: cargo::core::compiler::fingerprint:           (vs) "/home/reidruss/code/repos/refactor/target/debug/.fingerprint/uast-3240dc07e329e0e2/dep-test-lib-uast"
-   0.096090627s  INFO prepare_target{force=false package_id=uast v0.1.0 (/home/reidruss/code/repos/refactor/uast) target="uast"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1766098020, nanos: 162429306 } < FileTime { seconds: 1766098970, nanos: 637067840 }
-   0.096125877s  INFO prepare_target{force=false package_id=uast v0.1.0 (/home/reidruss/code/repos/refactor/uast) target="uast"}: cargo::core::compiler::fingerprint: fingerprint dirty for uast v0.1.0 (/home/reidruss/code/repos/refactor/uast)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("uast", ["lib"], "/home/reidruss/code/repos/refactor/uast/src/lib.rs", Edition2021) }
-   0.096151340s  INFO prepare_target{force=false package_id=uast v0.1.0 (/home/reidruss/code/repos/refactor/uast) target="uast"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/home/reidruss/code/repos/refactor/target/debug/.fingerprint/uast-3240dc07e329e0e2/dep-test-lib-uast", reference_mtime: FileTime { seconds: 1766098020, nanos: 162429306 }, stale: "/home/reidruss/code/repos/refactor/uast/src/lib.rs", stale_mtime: FileTime { seconds: 1766098970, nanos: 637067840 } }))
-    Checking uast v0.1.0 (/home/reidruss/code/repos/refactor/uast)
-    Checking c_sharp v0.1.0 (/home/reidruss/code/repos/refactor/languages/c_sharp)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.54s
+   0.029452399s  INFO prepare_target{force=false package_id=cli v0.1.0 (/home/reidruss/code/repos/refactor/cli) target="cli"}: cargo::core::compiler::fingerprint: stale: changed "/home/reidruss/code/repos/refactor/core/src/lib.rs"
+   0.029473537s  INFO prepare_target{force=false package_id=cli v0.1.0 (/home/reidruss/code/repos/refactor/cli) target="cli"}: cargo::core::compiler::fingerprint:           (vs) "/home/reidruss/code/repos/refactor/target/debug/.fingerprint/core-77f6731721d82d07/dep-lib-core"
+   0.029478693s  INFO prepare_target{force=false package_id=cli v0.1.0 (/home/reidruss/code/repos/refactor/cli) target="cli"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1766099543, nanos: 935277649 } < FileTime { seconds: 1766099683, nanos: 666712735 }
+   0.029529387s  INFO prepare_target{force=false package_id=cli v0.1.0 (/home/reidruss/code/repos/refactor/cli) target="cli"}: cargo::core::compiler::fingerprint: fingerprint dirty for cli v0.1.0 (/home/reidruss/code/repos/refactor/cli)/Check { test: false }/TargetInner { name: "cli", doc: true, ..: with_path("/home/reidruss/code/repos/refactor/cli/src/main.rs", Edition2021) }
+   0.029541749s  INFO prepare_target{force=false package_id=cli v0.1.0 (/home/reidruss/code/repos/refactor/cli) target="cli"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "core" })
+   0.029852911s  INFO prepare_target{force=false package_id=core v0.1.0 (/home/reidruss/code/repos/refactor/core) target="core"}: cargo::core::compiler::fingerprint: fingerprint dirty for core v0.1.0 (/home/reidruss/code/repos/refactor/core)/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("core", ["lib"], "/home/reidruss/code/repos/refactor/core/src/lib.rs", Edition2021) }
+   0.029865512s  INFO prepare_target{force=false package_id=core v0.1.0 (/home/reidruss/code/repos/refactor/core) target="core"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/home/reidruss/code/repos/refactor/target/debug/.fingerprint/core-77f6731721d82d07/dep-lib-core", reference_mtime: FileTime { seconds: 1766099543, nanos: 935277649 }, stale: "/home/reidruss/code/repos/refactor/core/src/lib.rs", stale_mtime: FileTime { seconds: 1766099683, nanos: 666712735 } }))
+   0.029989804s  INFO prepare_target{force=false package_id=cli v0.1.0 (/home/reidruss/code/repos/refactor/cli) target="cli"}: cargo::core::compiler::fingerprint: fingerprint dirty for cli v0.1.0 (/home/reidruss/code/repos/refactor/cli)/Check { test: true }/TargetInner { name: "cli", doc: true, ..: with_path("/home/reidruss/code/repos/refactor/cli/src/main.rs", Edition2021) }
+   0.029997835s  INFO prepare_target{force=false package_id=cli v0.1.0 (/home/reidruss/code/repos/refactor/cli) target="cli"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleDepFingerprint { name: "core" })
+   0.030174172s  INFO prepare_target{force=false package_id=core v0.1.0 (/home/reidruss/code/repos/refactor/core) target="core"}: cargo::core::compiler::fingerprint: stale: changed "/home/reidruss/code/repos/refactor/core/src/refactorings/rename_variable.rs"
+   0.030179089s  INFO prepare_target{force=false package_id=core v0.1.0 (/home/reidruss/code/repos/refactor/core) target="core"}: cargo::core::compiler::fingerprint:           (vs) "/home/reidruss/code/repos/refactor/target/debug/.fingerprint/core-ddf8095cc5bc1535/dep-test-lib-core"
+   0.030182160s  INFO prepare_target{force=false package_id=core v0.1.0 (/home/reidruss/code/repos/refactor/core) target="core"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 1766099564, nanos: 214063420 } < FileTime { seconds: 1766099683, nanos: 666712735 }
+   0.030199090s  INFO prepare_target{force=false package_id=core v0.1.0 (/home/reidruss/code/repos/refactor/core) target="core"}: cargo::core::compiler::fingerprint: fingerprint dirty for core v0.1.0 (/home/reidruss/code/repos/refactor/core)/Check { test: true }/TargetInner { name_inferred: true, ..: lib_target("core", ["lib"], "/home/reidruss/code/repos/refactor/core/src/lib.rs", Edition2021) }
+   0.030205958s  INFO prepare_target{force=false package_id=core v0.1.0 (/home/reidruss/code/repos/refactor/core) target="core"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "/home/reidruss/code/repos/refactor/target/debug/.fingerprint/core-ddf8095cc5bc1535/dep-test-lib-core", reference_mtime: FileTime { seconds: 1766099564, nanos: 214063420 }, stale: "/home/reidruss/code/repos/refactor/core/src/refactorings/rename_variable.rs", stale_mtime: FileTime { seconds: 1766099683, nanos: 666712735 } }))
+    Checking core v0.1.0 (/home/reidruss/code/repos/refactor/core)
+    Checking cli v0.1.0 (/home/reidruss/code/repos/refactor/cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.14s

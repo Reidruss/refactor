@@ -1,6 +1,6 @@
 use c_sharp::lower_statement;
 use parser::GenericParser;
-use uast::{Expression, Literal, Span, Statement};
+use uast::{Expression, Literal, Statement};
 
 #[test]
 fn test_lower_variable_declaration() {

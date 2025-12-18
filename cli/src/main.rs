@@ -1,8 +1,8 @@
+use c_sharp::{codegen::CSharpCodeGenerator, lower_top_level};
+use core::{Refactoring, RenameVariable};
 use std::env;
 use std::fs;
 use tree_sitter::Parser;
-use c_sharp::{lower_top_level, codegen::CSharpCodeGenerator};
-use core::{Refactoring, RenameVariable};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -19,7 +19,9 @@ fn main() {
 
     // 1. Parse
     let mut parser = Parser::new();
-    parser.set_language(tree_sitter_c_sharp::language()).expect("Error loading C# grammar");
+    parser
+        .set_language(tree_sitter_c_sharp::language())
+        .expect("Error loading C# grammar");
     let tree = parser.parse(&source_code, None).expect("Error parsing");
     let root = tree.root_node();
 
@@ -27,9 +29,10 @@ fn main() {
     // In real app, we'd handle compilation units.
     // Finding the first class_declaration
     let mut cursor = root.walk();
-    let class_node = root.children(&mut cursor)
+    let class_node = root
+        .children(&mut cursor)
         .find(|n| n.kind() == "class_declaration");
-    
+
     if let Some(node) = class_node {
         // 2. Lower
         let mut uast = lower_top_level(node, source_code.as_bytes());
