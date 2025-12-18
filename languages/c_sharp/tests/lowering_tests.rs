@@ -16,7 +16,10 @@ fn test_lower_variable_declaration() {
     let result: Statement = lower_statement(first_node, code.as_bytes());
 
     if let Statement::DeclStmt(decl_stmt) = result {
-        assert_eq!(decl_stmt.modifiers.as_ref().map(|m| &m[0]), Some(&"const".to_string()));
+        assert_eq!(
+            decl_stmt.modifiers.as_ref().map(|m| &m[0]),
+            Some(&"const".to_string())
+        );
 
         let decl = &decl_stmt.var_decl;
         assert_eq!(decl.name, "i");
@@ -27,7 +30,6 @@ fn test_lower_variable_declaration() {
             decl.value,
             Some(Box::new(Expression::Literal(Literal::Float(5.0))))
         );
-
     } else {
         panic!("Expected a DeclStmt, but got {:?}", result);
     }
@@ -65,7 +67,10 @@ fn test_lower_if_statement() {
                 Some(Box::new(Expression::Literal(Literal::Integer(1))))
             );
         } else {
-            panic!("Expected DeclStmt in if consequence, got {:?}", if_stmt.consequence.statements[0]);
+            panic!(
+                "Expected DeclStmt in if consequence, got {:?}",
+                if_stmt.consequence.statements[0]
+            );
         }
     } else {
         panic!("Expected IfStatement, got {:?}", result);
@@ -80,7 +85,9 @@ fn test_lower_if_else_statement() {
     let tree = parser.parse(code);
 
     let root = tree.root_node();
-    let if_else_node = root.child(0).expect("Code should have an if-else statement");
+    let if_else_node = root
+        .child(0)
+        .expect("Code should have an if-else statement");
 
     let result = lower_statement(if_else_node, code.as_bytes());
 
@@ -103,7 +110,10 @@ fn test_lower_if_else_statement() {
                 Some(Box::new(Expression::Literal(Literal::Integer(2))))
             );
         } else {
-            panic!("Expected DeclStmt in if consequence, got {:?}", if_stmt.consequence.statements[0]);
+            panic!(
+                "Expected DeclStmt in if consequence, got {:?}",
+                if_stmt.consequence.statements[0]
+            );
         }
 
         // Verify the alternative block
@@ -119,7 +129,10 @@ fn test_lower_if_else_statement() {
                     Some(Box::new(Expression::Literal(Literal::Integer(3))))
                 );
             } else {
-                panic!("Expected DeclStmt in else alternative, got {:?}", alt_block.statements[0]);
+                panic!(
+                    "Expected DeclStmt in else alternative, got {:?}",
+                    alt_block.statements[0]
+                );
             }
         }
     } else {

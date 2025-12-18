@@ -4,7 +4,12 @@ use uast::{BinaryOperator, Expression, Literal};
 
 fn print_tree(node: tree_sitter::Node, source: &str, depth: usize) {
     let indent = "  ".repeat(depth);
-    println!("{}{}: \"{}\"", indent, node.kind(), node.utf8_text(source.as_bytes()).unwrap_or(""));
+    println!(
+        "{}{}: \"{}\"",
+        indent,
+        node.kind(),
+        node.utf8_text(source.as_bytes()).unwrap_or("")
+    );
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         print_tree(child, source, depth + 1);
@@ -35,7 +40,8 @@ fn test_lower_integer_literal() {
         None
     }
 
-    let literal_node = find_node(root, "integer_literal").expect("Could not find integer_literal in the tree");
+    let literal_node =
+        find_node(root, "integer_literal").expect("Could not find integer_literal in the tree");
 
     let result = lower_expressions(literal_node, code.as_bytes());
 
@@ -70,7 +76,8 @@ fn test_lower_binary_expression() {
         None
     }
 
-    let binary_node = find_node(root, "binary_expression").expect("Could not find binary_expression in the tree");
+    let binary_node =
+        find_node(root, "binary_expression").expect("Could not find binary_expression in the tree");
 
     let result = lower_expressions(binary_node, code.as_bytes());
 
@@ -80,7 +87,7 @@ fn test_lower_binary_expression() {
         if let Expression::Literal(Literal::Integer(left_val)) = *bin_op.left {
             assert_eq!(left_val, 1);
         } else {
-             panic!("Expected left operand to be 1");
+            panic!("Expected left operand to be 1");
         }
 
         if let Expression::Literal(Literal::Integer(right_val)) = *bin_op.right {
@@ -88,12 +95,10 @@ fn test_lower_binary_expression() {
         } else {
             panic!("Expected right operand to be 2");
         }
-
     } else {
         panic!("Expected BinaryOp, got {:?}", result);
     }
 }
-
 
 #[test]
 fn test_lower_string_literal() {
@@ -119,7 +124,8 @@ fn test_lower_string_literal() {
         None
     }
 
-    let literal_node = find_node(root, "string_literal").expect("Could not find string_literal in the tree");
+    let literal_node =
+        find_node(root, "string_literal").expect("Could not find string_literal in the tree");
 
     let result = lower_expressions(literal_node, code.as_bytes());
 
@@ -129,7 +135,6 @@ fn test_lower_string_literal() {
         panic!("Expected String Literal, got {:?}", result);
     }
 }
-
 
 #[test]
 fn test_lower_real_literal() {
@@ -155,7 +160,8 @@ fn test_lower_real_literal() {
         None
     }
 
-    let literal_node = find_node(root, "real_literal").expect("Could not find integer_literal in the tree");
+    let literal_node =
+        find_node(root, "real_literal").expect("Could not find integer_literal in the tree");
 
     let result = lower_expressions(literal_node, code.as_bytes());
 

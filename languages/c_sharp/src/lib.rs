@@ -1,8 +1,5 @@
 use tree_sitter::Node;
-use uast::{
-    Assignment, AssignmentOperator, BinaryOp, BinaryOperator, Block, DeclStmt, Expression,
-    IfStatement, Literal, Span, Statement, UnaryOp, UnaryOperator, VarDecl,
-};
+use uast::*;
 
 fn extract_modifiers(node: Node, source: &[u8]) -> Option<Vec<String>> {
     let mut modifiers = Vec::new();
@@ -16,6 +13,42 @@ fn extract_modifiers(node: Node, source: &[u8]) -> Option<Vec<String>> {
     }
 
     Some(modifiers)
+}
+
+fn extract_parameters(node: Node, source: &[u8]) -> Option<Vec<VarDecl>> {
+    let mut parameters = Vec::new();
+    
+    if let Some(param_list) = node.child_by_field_name("parameters") {
+        let mut cursor = param_list.walk();
+        for child in param_list.children(&mut cursor) {
+            if child.kind() == "parameter" {
+                let var_type = child
+                    .named_child(0)
+                    .unwrap()
+                    .utf8_text(source)
+                    .unwrap()
+                    .to_string();
+                let name = child
+                    .named_child(1)
+                    .unwrap()
+                    .utf8_text(source)
+                    .unwrap()
+                    .to_string();
+
+                parameters.push(VarDecl {
+                    span: Span {
+                        start: child.start_byte(),
+                        end: child.end_byte(),
+                    },
+                    modifiers: None,
+                    var_type: Some(var_type),
+                    name,
+                    value: None,
+                });
+            }
+        }
+    }
+    Some(parameters)
 }
 
 pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
@@ -48,9 +81,10 @@ pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
             }
 
             if let Some(node) = variable_decl_node {
-                 let type_node = node
+                let type_node = node
                     .named_child(0)
                     .expect("Expected a type child for variable_declaration");
+
                 let var_type = Some(type_node.utf8_text(source).unwrap().to_string());
 
                 let variable_declarator_node = node
@@ -108,7 +142,8 @@ pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
             let consequence = Box::new(lower_block(consequence_node, source));
 
             let mut alternative: Option<Box<Block>> = None;
-            if let Some(alternative_node) = node.named_child(2) { // Directly get the alternative block
+            if let Some(alternative_node) = node.named_child(2) {
+                // Directly get the alternative block
                 alternative = Some(Box::new(lower_block(alternative_node, source)));
             }
 
@@ -121,6 +156,13 @@ pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
                     end: node.end_byte(),
                 },
             })
+        }
+        "return_statement" => {
+            let mut value: Option<Box<Expression>> = None;
+            if let Some(child) = node.named_child(0) {
+                value = Some(Box::new(lower_expressions(child, source)));
+            }
+            Statement::ReturnStatement(ReturnStatement { value })
         }
         _ => Statement::Unknown {
             source: node.utf8_text(source).unwrap().to_string(),
@@ -185,9 +227,15 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
             Expression::Identifier(text.to_string())
         }
         "binary_expression" => {
-            let left_node = node.child_by_field_name("left").expect("Binary expr missing left");
-            let right_node = node.child_by_field_name("right").expect("Binary expr missing right");
-            let operator_node = node.child_by_field_name("operator").expect("Binary expr missing op");
+            let left_node = node
+                .child_by_field_name("left")
+                .expect("Binary expr missing left");
+            let right_node = node
+                .child_by_field_name("right")
+                .expect("Binary expr missing right");
+            let operator_node = node
+                .child_by_field_name("operator")
+                .expect("Binary expr missing op");
 
             let op_text = operator_node.utf8_text(source).unwrap();
             let operator = match op_text {
@@ -210,8 +258,87 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
                 right: Box::new(lower_expressions(right_node, source)),
             })
         }
-        // Fallback for unimplemented types
         _ => Expression::Raw {
+            source: node.utf8_text(source).unwrap_or("").to_string(),
+            span: Span {
+                start: node.start_byte(),
+                end: node.end_byte(),
+            },
+        },
+    }
+}
+
+pub fn lower_top_level(node: Node, source: &[u8]) -> TopLevel {
+    match node.kind() {
+        "class_declaration" => {
+            let name = node
+                .child_by_field_name("name")
+                .expect("unable to find class name")
+                .utf8_text(source)
+                .unwrap()
+                .to_string();
+
+            let mut top_levels: Vec<TopLevel> = vec![];
+            
+            if let Some(body_node) = node.child_by_field_name("body") {
+                let mut cursor = body_node.walk();
+                for child in body_node.children(&mut cursor) {
+                    if child.kind() == "method_declaration" {
+                        top_levels.push(lower_top_level(child, source));
+                    }
+                }
+            }
+
+            let modifiers: Option<Vec<String>> = extract_modifiers(node, source);
+
+            TopLevel::Class(ClassDef {
+                name,
+                span: Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
+
+                body: Some(top_levels),
+                modifiers: modifiers,
+                annotations: None,
+                metadata: None,
+            })
+        }
+        "method_declaration" => {
+            let name = node
+                .child_by_field_name("name")
+                .expect("unable to find method name")
+                .utf8_text(source)
+                .unwrap()
+                .to_string();
+
+            let return_type_node = node.child_by_field_name("type").expect("unable to find return type");
+            let return_type_str = return_type_node.utf8_text(source).unwrap().to_string();
+
+            let mut body_parts: Vec<FunctionBody> = vec![];
+            
+            if let Some(body_node) = node.child_by_field_name("body") {
+                 body_parts.push(FunctionBody::Block(lower_block(body_node, source)));
+            }
+
+            let modifiers: Option<Vec<String>> = extract_modifiers(node, source);
+            let parameters: Option<Vec<VarDecl>> = extract_parameters(node, source);
+
+            TopLevel::Function(FunctionDef {
+                name,
+                span: Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
+                body: Some(body_parts),
+                modifiers,
+                parameters,
+                return_type: Some(return_type_str),
+                annotations: None,
+                metadata: None,
+            })
+        }
+        _ => TopLevel::Unknown {
             source: node.utf8_text(source).unwrap_or("").to_string(),
             span: Span {
                 start: node.start_byte(),

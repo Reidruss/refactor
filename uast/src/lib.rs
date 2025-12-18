@@ -21,51 +21,73 @@ pub enum Literal {
 // --- Operators ---
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BinaryOperator {
-    Add, Sub, Mul, Div,
-    Equal, NotEqual,
-    GreaterThan, LessThan,
-    GreaterThanEqual, LessThanEqual,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Equal,
+    NotEqual,
+    GreaterThan,
+    LessThan,
+    GreaterThanEqual,
+    LessThanEqual,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ArithmeticOperator {
-    Add, Sub, Mul, Div, Mod
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ComparisonOperator {
-    Equal, NotEqual,
-    GreaterThan, LessThan,
-    GreaterThanEqual, LessThanEqual
+    Equal,
+    NotEqual,
+    GreaterThan,
+    LessThan,
+    GreaterThanEqual,
+    LessThanEqual,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum LogicalOperator {
-    And, Or, Xor, CondAnd, CondOr
+    And,
+    Or,
+    Xor,
+    CondAnd,
+    CondOr,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BitwiseOperator {
-    And, Or, Xor, LeftShift, RightShift, UnsignedRightShift
+    And,
+    Or,
+    Xor,
+    LeftShift,
+    RightShift,
+    UnsignedRightShift,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum UnaryOperator {
-    Negate,       // -x
-    Not,          // !x
-    PreIncrement, // ++x
-    PostIncrement,// x++
-    PreDecrement, // --x
-    PostDecrement,// x--
+    Negate,        // -x
+    Not,           // !x
+    PreIncrement,  // ++x
+    PostIncrement, // x++
+    PreDecrement,  // --x
+    PostDecrement, // x--
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum AssignmentOperator {
-    Assign,       // =
-    AddAssign,    // +=
-    SubAssign,    // -=
-    MulAssign,    // *=
-    DivAssign,    // /=
+    Assign,    // =
+    AddAssign, // +=
+    SubAssign, // -=
+    MulAssign, // *=
+    DivAssign, // /=
 }
 
 // --- Expressions ---
@@ -73,7 +95,7 @@ pub enum AssignmentOperator {
 pub struct BinaryOp {
     pub left: Box<Expression>,
     pub operator: BinaryOperator,
-    pub right: Box<Expression>
+    pub right: Box<Expression>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -96,10 +118,7 @@ pub enum Expression {
     BinaryOp(BinaryOp),
     UnaryOp(UnaryOp),
     Assignment(Assignment),
-    Raw {
-        source: String,
-        span: Span
-    },
+    Raw { source: String, span: Span },
 }
 
 // --- Statements ---
@@ -144,16 +163,15 @@ pub struct VarDecl {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DeclStmt {
-    pub modifiers : Option<Vec<String>>,
-    pub var_decl : VarDecl,
+    pub modifiers: Option<Vec<String>>,
+    pub var_decl: VarDecl,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ReturnStatement {
     // Need to somehow store the type if inferred, or just rely on value expression
-    pub value: Option<Box<Expression>>, 
+    pub value: Option<Box<Expression>>,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ExpressionStatement {
@@ -186,22 +204,22 @@ pub enum TopLevel {
 pub struct ClassDef {
     pub name: String,
     pub span: Span,
-    pub body: Vec<TopLevel>,
-    pub modifiers: Vec<String>,
-    pub annotations: Vec<Annotation>,
-    pub metadata: Metadata,
+    pub body: Option<Vec<TopLevel>>,
+    pub modifiers: Option<Vec<String>>,
+    pub annotations: Option<Vec<Annotation>>,
+    pub metadata: Option<Metadata>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct FunctionDef {
     pub name: String,
     pub span: Span,
-    pub body: Block,
-    pub modifiers: Vec<String>,
-    pub parameters: Vec<VarDecl>,
+    pub body: Option<Vec<FunctionBody>>,
+    pub modifiers: Option<Vec<String>>,
+    pub parameters: Option<Vec<VarDecl>>,
     pub return_type: Option<String>,
-    pub annotations: Vec<Annotation>,
-    pub metadata: Metadata,
+    pub annotations: Option<Vec<Annotation>>,
+    pub metadata: Option<Metadata>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -217,4 +235,11 @@ pub struct Annotation {
     pub name: String,
     pub arguments: Vec<Expression>,
     pub span: Span,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum FunctionBody {
+    Block(Block),
+    TopLevel(TopLevel),
+    Expression(Expression),
 }
