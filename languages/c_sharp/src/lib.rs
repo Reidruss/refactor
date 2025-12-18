@@ -1,6 +1,8 @@
 use tree_sitter::Node;
 use uast::*;
 
+pub mod codegen;
+
 fn extract_modifiers(node: Node, source: &[u8]) -> Option<Vec<String>> {
     let mut modifiers = Vec::new();
     let mut cursor = node.walk();

@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+c_sharp = { version = "0.1.0", path = "../languages/c_sharp" }
+core = { version = "0.1.0", path = "../core" }
+tree-sitter.workspace = true
+tree-sitter-c-sharp = "0.20.0"
+uast = { version = "0.1.0", path = "../uast" }
