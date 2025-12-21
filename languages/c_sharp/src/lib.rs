@@ -166,6 +166,19 @@ pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
             }
             Statement::ReturnStatement(ReturnStatement { value })
         }
+        "expression_statement" => {
+            let expr_node = node
+                .named_child(0)
+                .expect("Expression statement must have an expression");
+            let expression = Box::new(lower_expressions(expr_node, source));
+            Statement::ExpressionStatement(ExpressionStatement {
+                expression,
+                span: Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
+            })
+        }
         _ => Statement::Unknown {
             source: node.utf8_text(source).unwrap().to_string(),
             span: Span {
@@ -259,6 +272,44 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
                 operator,
                 right: Box::new(lower_expressions(right_node, source)),
             })
+        }
+        "assignment_expression" => {
+            let left_node = node
+                .child_by_field_name("left")
+                .expect("Assignment missing left");
+            let right_node = node
+                .child_by_field_name("right")
+                .expect("Assignment missing right");
+
+            let operator_node = node.child_by_field_name("operator").or_else(|| {
+                let mut cursor = node.walk();
+                for child in node.children(&mut cursor) {
+                    if child.id() != left_node.id() && child.id() != right_node.id() {
+                        return Some(child);
+                    }
+                }
+                None
+            }).expect("Assignment missing operator");
+
+            let op_text = operator_node.utf8_text(source).unwrap();
+            let operator = match op_text {
+                "=" => AssignmentOperator::Assign,
+                "+=" => AssignmentOperator::AddAssign,
+                "-=" => AssignmentOperator::SubAssign,
+                "*=" => AssignmentOperator::MulAssign,
+                "/=" => AssignmentOperator::DivAssign,
+                _ => AssignmentOperator::Assign,
+            };
+
+            Expression::Assignment(Assignment {
+                left: Box::new(lower_expressions(left_node, source)),
+                operator,
+                right: Box::new(lower_expressions(right_node, source)),
+            })
+        }
+        "parenthesized_expression" => {
+            let inner = node.named_child(0).expect("Parenthesized expr empty");
+            lower_expressions(inner, source)
         }
         _ => Expression::Raw {
             source: node.utf8_text(source).unwrap_or("").to_string(),

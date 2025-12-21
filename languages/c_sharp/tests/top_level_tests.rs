@@ -1,8 +1,6 @@
 use c_sharp::lower_top_level;
 use tree_sitter::Parser;
-use uast::{
-    Expression, FunctionBody, Literal, Statement, TopLevel,
-};
+use uast::{Expression, FunctionBody, Literal, Statement, TopLevel};
 
 #[test]
 fn test_lower_class_with_method() {
