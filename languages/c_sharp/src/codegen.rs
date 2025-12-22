@@ -91,9 +91,9 @@ impl CSharpCodeGenerator {
         if let Some(body) = &func_def.body {
             for item in body {
                 match item {
-                    FunctionBody::Block(block) => output.push_str(&self.generate_block(block)),
-                    FunctionBody::TopLevel(tl) => output.push_str(&self.generate(tl)), // Should not happen for methods usually
-                    FunctionBody::Expression(expr) => {
+                    FunctionBodyItems::Block(block) => output.push_str(&self.generate_block(block)),
+                    FunctionBodyItems::TopLevel(tl) => output.push_str(&self.generate(tl)), // Should not happen for methods usually
+                    FunctionBodyItems::Expression(expr) => {
                         output.push_str(" => ");
                         output.push_str(&self.generate_expression(expr));
                         output.push(';');
@@ -126,7 +126,7 @@ impl CSharpCodeGenerator {
         match stmt {
             Statement::DeclStmt(decl) => {
                 let mut output = String::new();
-                let v = &decl.var_decl;
+                let vars = &decl.var_decls;
 
                 if let Some(modifiers) = &decl.modifiers {
                     if !modifiers.is_empty() {
@@ -135,18 +135,26 @@ impl CSharpCodeGenerator {
                     }
                 }
 
-                if let Some(t) = &v.var_type {
+                if let Some(t) = &vars[0].var_type {
                     output.push_str(t);
-                } else {
-                    output.push_str("var");
                 }
                 output.push(' ');
-                output.push_str(&v.name);
 
-                if let Some(val) = &v.value {
+                vars.into_iter().for_each(|var| {
+                    output.push_str(&var.name);
+                    output.push_str(", ");
+                });
+
+                // Removing the last ", " in the case of multiple var decls on a single line.
+                // Ex. double length, width, height;
+                output.pop();
+                output.pop();
+
+                if let Some(val) = &vars[0].value {
                     output.push_str(" = ");
                     output.push_str(&self.generate_expression(val));
                 }
+
                 output.push(';');
                 output
             }
@@ -188,8 +196,9 @@ impl CSharpCodeGenerator {
             Expression::Literal(lit) => match lit {
                 Literal::Integer(i) => i.to_string(),
                 Literal::Float(f) => f.to_string(),
-                Literal::String(s) => format!("\"{}\"", s), // Basic escaping
+                Literal::String(s) => format!("\"{}\"", s),
                 Literal::Boolean(b) => b.to_string(),
+                Literal::Char(c) => c.to_string(),
             },
             Expression::BinaryOp(op) => {
                 let left = self.generate_expression(&op.left);

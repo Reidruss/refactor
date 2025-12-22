@@ -41,9 +41,9 @@ fn visit_top_level(node: &mut TopLevel, old: &str, new: &str) {
             if let Some(body) = &mut func.body {
                 for item in body {
                     match item {
-                        FunctionBody::Block(block) => visit_block(block, old, new),
-                        FunctionBody::TopLevel(tl) => visit_top_level(tl, old, new),
-                        FunctionBody::Expression(expr) => visit_expression(expr, old, new),
+                        FunctionBodyItems::Block(block) => visit_block(block, old, new),
+                        FunctionBodyItems::TopLevel(tl) => visit_top_level(tl, old, new),
+                        FunctionBodyItems::Expression(expr) => visit_expression(expr, old, new),
                     }
                 }
             }
@@ -60,13 +60,17 @@ fn visit_top_level(node: &mut TopLevel, old: &str, new: &str) {
 
 fn visit_statement(stmt: &mut Statement, old: &str, new: &str) {
     match stmt {
-        Statement::DeclStmt(decl) => {
-            if decl.var_decl.name == old {
-                decl.var_decl.name = new.to_string();
+        Statement::DeclStmt(decl_stmt) => {
+            
+            for var in decl_stmt.var_decls.iter_mut() {
+                if var.name == old {
+                    var.name = new.to_string();
+                }
+                if let Some(val) = &mut var.value {
+                    visit_expression(val, old, new);
+                }
             }
-            if let Some(val) = &mut decl.var_decl.value {
-                visit_expression(val, old, new);
-            }
+
         }
         Statement::IfStatement(if_stmt) => {
             visit_expression(&mut if_stmt.condition, old, new);

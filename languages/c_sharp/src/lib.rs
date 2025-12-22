@@ -71,65 +71,57 @@ pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
         }
         "local_declaration_statement" => {
             let modifiers = extract_modifiers(node, source);
-
             let mut cursor = node.walk();
 
-            let mut variable_decl_node = None;
-            for child in node.children(&mut cursor) {
-                if child.kind() == "variable_declaration" {
-                    variable_decl_node = Some(child);
-                    break;
-                }
-            }
+            let variable_declaration_node = node
+                .children(&mut cursor)
+                .find(|child| child.kind() == "variable_declaration")
+                .expect("Expected to find variable declaration inside local declaration");
 
-            if let Some(node) = variable_decl_node {
-                let type_node = node
-                    .named_child(0)
-                    .expect("Expected a type child for variable_declaration");
+            let var_type = variable_declaration_node
+                .named_child(0)
+                .unwrap()
+                .utf8_text(source)
+                .unwrap()
+                .to_string();
 
-                let var_type = Some(type_node.utf8_text(source).unwrap().to_string());
+            let variable_declarators: Vec<VarDecl> = variable_declaration_node
+                .children(&mut cursor)
+                .filter(|child| child.kind() == "variable_declarator")
+                .map(|var| {
+                    let name = var
+                        .named_child(0)
+                        .unwrap()
+                        .utf8_text(source)
+                        .unwrap()
+                        .to_string();
 
-                let variable_declarator_node = node
-                    .named_child(1)
-                    .expect("Expected a variable_declarator child for variable_declaration");
+                    let value: Option<Box<Expression>> = var
+                        .named_child(1)
+                        .filter(|child| child.kind() == "equals_value_clause")
+                        .and_then(|clause| {
+                            clause.named_child(0).map(|literal_node| {
+                                Box::new(lower_expressions(literal_node, source))
+                            })
+                        });
 
-                let identifier_node = variable_declarator_node
-                    .named_child(0)
-                    .expect("Expected an identifier child for variable_declarator");
-
-                let name = identifier_node.utf8_text(source).unwrap().to_string();
-
-                let mut value: Option<Box<Expression>> = None;
-                if let Some(equals_value_clause_node) = variable_declarator_node.named_child(1) {
-                    if equals_value_clause_node.kind() == "equals_value_clause" {
-                        if let Some(literal_node) = equals_value_clause_node.named_child(0) {
-                            value = Some(Box::new(lower_expressions(literal_node, source)));
-                        }
-                    }
-                }
-
-                Statement::DeclStmt(DeclStmt {
-                    modifiers,
-                    var_decl: VarDecl {
-                        name,
-                        modifiers: None,
-                        var_type,
-                        value,
+                    VarDecl {
                         span: Span {
                             start: node.start_byte(),
                             end: node.end_byte(),
                         },
-                    },
+                        modifiers: None,
+                        var_type: Some(var_type.clone()),
+                        name,
+                        value,
+                    }
                 })
-            } else {
-                Statement::Unknown {
-                    source: node.utf8_text(source).unwrap().to_string(),
-                    span: Span {
-                        start: node.start_byte(),
-                        end: node.end_byte(),
-                    },
-                }
-            }
+                .collect();
+
+            Statement::DeclStmt(DeclStmt {
+                modifiers,
+                var_decls: variable_declarators,
+            })
         }
         "if_statement" => {
             let condition_node = node
@@ -281,15 +273,18 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
                 .child_by_field_name("right")
                 .expect("Assignment missing right");
 
-            let operator_node = node.child_by_field_name("operator").or_else(|| {
-                let mut cursor = node.walk();
-                for child in node.children(&mut cursor) {
-                    if child.id() != left_node.id() && child.id() != right_node.id() {
-                        return Some(child);
+            let operator_node = node
+                .child_by_field_name("operator")
+                .or_else(|| {
+                    let mut cursor = node.walk();
+                    for child in node.children(&mut cursor) {
+                        if child.id() != left_node.id() && child.id() != right_node.id() {
+                            return Some(child);
+                        }
                     }
-                }
-                None
-            }).expect("Assignment missing operator");
+                    None
+                })
+                .expect("Assignment missing operator");
 
             let op_text = operator_node.utf8_text(source).unwrap();
             let operator = match op_text {
@@ -370,10 +365,10 @@ pub fn lower_top_level(node: Node, source: &[u8]) -> TopLevel {
                 .expect("unable to find return type");
             let return_type_str = return_type_node.utf8_text(source).unwrap().to_string();
 
-            let mut body_parts: Vec<FunctionBody> = vec![];
+            let mut body_items: Vec<FunctionBodyItems> = vec![];
 
             if let Some(body_node) = node.child_by_field_name("body") {
-                body_parts.push(FunctionBody::Block(lower_block(body_node, source)));
+                body_items.push(FunctionBodyItems::Block(lower_block(body_node, source)));
             }
 
             let modifiers: Option<Vec<String>> = extract_modifiers(node, source);
@@ -385,7 +380,7 @@ pub fn lower_top_level(node: Node, source: &[u8]) -> TopLevel {
                     start: node.start_byte(),
                     end: node.end_byte(),
                 },
-                body: Some(body_parts),
+                body: Some(body_items),
                 modifiers,
                 parameters,
                 return_type: Some(return_type_str),

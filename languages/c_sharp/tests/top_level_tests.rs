@@ -1,6 +1,6 @@
 use c_sharp::lower_top_level;
 use tree_sitter::Parser;
-use uast::{Expression, FunctionBody, Literal, Statement, TopLevel};
+use uast::{Expression, FunctionBodyItems, Literal, Statement, TopLevel};
 
 #[test]
 fn test_lower_class_with_method() {
@@ -56,7 +56,7 @@ fn test_lower_class_with_method() {
                 .expect("Function body should be present");
             assert_eq!(func_body.len(), 1);
 
-            if let FunctionBody::Block(block) = &func_body[0] {
+            if let FunctionBodyItems::Block(block) = &func_body[0] {
                 assert_eq!(block.statements.len(), 1);
                 // Verify return statement
                 match &block.statements[0] {

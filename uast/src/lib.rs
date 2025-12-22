@@ -16,6 +16,7 @@ pub enum Literal {
     Float(f64),
     String(String),
     Boolean(bool),
+    Char(char),
 }
 
 // --- Operators ---
@@ -73,21 +74,21 @@ pub enum BitwiseOperator {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum UnaryOperator {
-    Negate,        // -x
-    Not,           // !x
-    PreIncrement,  // ++x
-    PostIncrement, // x++
-    PreDecrement,  // --x
-    PostDecrement, // x--
+    Negate,
+    Not,
+    PreIncrement,
+    PostIncrement,
+    PreDecrement,
+    PostDecrement,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum AssignmentOperator {
-    Assign,    // =
-    AddAssign, // +=
-    SubAssign, // -=
-    MulAssign, // *=
-    DivAssign, // /=
+    Assign,
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
 }
 
 // --- Expressions ---
@@ -164,7 +165,7 @@ pub struct VarDecl {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DeclStmt {
     pub modifiers: Option<Vec<String>>,
-    pub var_decl: VarDecl,
+    pub var_decls: Vec<VarDecl>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -214,7 +215,7 @@ pub struct ClassDef {
 pub struct FunctionDef {
     pub name: String,
     pub span: Span,
-    pub body: Option<Vec<FunctionBody>>,
+    pub body: Option<Vec<FunctionBodyItems>>,
     pub modifiers: Option<Vec<String>>,
     pub parameters: Option<Vec<VarDecl>>,
     pub return_type: Option<String>,
@@ -238,7 +239,7 @@ pub struct Annotation {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum FunctionBody {
+pub enum FunctionBodyItems {
     Block(Block),
     TopLevel(TopLevel),
     Expression(Expression),
