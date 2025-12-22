@@ -197,7 +197,7 @@ impl CSharpCodeGenerator {
 
     fn generate_expression(&self, expr: &Expression) -> String {
         match expr {
-            Expression::Identifier(id) => id.clone(),
+            Expression::Identifier(id, _) => id.clone(),
             Expression::Literal(lit) => match lit {
                 Literal::Integer(i) => i.to_string(),
                 Literal::Float(f) => f.to_string(),

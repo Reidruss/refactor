@@ -9,6 +9,7 @@ pub struct RefactorArgs {
 
 #[derive(Debug, Subcommand)]
 pub enum EntityType {
+    /// Renames a variable in the specified file
     RenameVariable(RenameVariableCommand),
 }
 

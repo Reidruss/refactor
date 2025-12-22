@@ -114,7 +114,7 @@ pub struct Assignment {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Expression {
-    Identifier(String),
+    Identifier(String, Span),
     Literal(Literal),
     BinaryOp(BinaryOp),
     UnaryOp(UnaryOp),
@@ -159,6 +159,7 @@ pub struct VarDecl {
     pub modifiers: Option<Vec<String>>,
     pub var_type: Option<String>,
     pub name: String,
+    pub name_span: Span,
     pub value: Option<Box<Expression>>,
 }
 

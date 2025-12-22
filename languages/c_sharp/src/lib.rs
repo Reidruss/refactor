@@ -30,12 +30,9 @@ fn extract_parameters(node: Node, source: &[u8]) -> Option<Vec<VarDecl>> {
                     .utf8_text(source)
                     .unwrap()
                     .to_string();
-                let name = child
-                    .named_child(1)
-                    .unwrap()
-                    .utf8_text(source)
-                    .unwrap()
-                    .to_string();
+                
+                let name_node = child.named_child(1).unwrap();
+                let name = name_node.utf8_text(source).unwrap().to_string();
 
                 parameters.push(VarDecl {
                     span: Span {
@@ -45,6 +42,10 @@ fn extract_parameters(node: Node, source: &[u8]) -> Option<Vec<VarDecl>> {
                     modifiers: None,
                     var_type: Some(var_type),
                     name,
+                    name_span: Span {
+                        start: name_node.start_byte(),
+                        end: name_node.end_byte(),
+                    },
                     value: None,
                 });
             }
@@ -89,12 +90,8 @@ pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
                 .children(&mut cursor)
                 .filter(|child| child.kind() == "variable_declarator")
                 .map(|var| {
-                    let name = var
-                        .named_child(0)
-                        .unwrap()
-                        .utf8_text(source)
-                        .unwrap()
-                        .to_string();
+                    let name_node = var.named_child(0).unwrap();
+                    let name = name_node.utf8_text(source).unwrap().to_string();
 
                     let value: Option<Box<Expression>> = var
                         .named_child(1)
@@ -113,6 +110,10 @@ pub fn lower_statement(node: Node, source: &[u8]) -> Statement {
                         modifiers: None,
                         var_type: Some(var_type.clone()),
                         name,
+                        name_span: Span {
+                            start: name_node.start_byte(),
+                            end: name_node.end_byte(),
+                        },
                         value,
                     }
                 })
@@ -231,7 +232,10 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
         }
         "identifier" => {
             let text = node.utf8_text(source).unwrap();
-            Expression::Identifier(text.to_string())
+            Expression::Identifier(text.to_string(), Span {
+                start: node.start_byte(),
+                end: node.end_byte(),
+            })
         }
         "binary_expression" => {
             let left_node = node
@@ -365,10 +369,10 @@ pub fn lower_top_level(node: Node, source: &[u8]) -> TopLevel {
                 .expect("unable to find return type");
             let return_type_str = return_type_node.utf8_text(source).unwrap().to_string();
 
-            let mut body_items: Vec<FunctionBodyItems> = vec![];
+            let mut body_parts: Vec<FunctionBodyItems> = vec![];
 
             if let Some(body_node) = node.child_by_field_name("body") {
-                body_items.push(FunctionBodyItems::Block(lower_block(body_node, source)));
+                body_parts.push(FunctionBodyItems::Block(lower_block(body_node, source)));
             }
 
             let modifiers: Option<Vec<String>> = extract_modifiers(node, source);
@@ -380,7 +384,7 @@ pub fn lower_top_level(node: Node, source: &[u8]) -> TopLevel {
                     start: node.start_byte(),
                     end: node.end_byte(),
                 },
-                body: Some(body_items),
+                body: Some(body_parts),
                 modifiers,
                 parameters,
                 return_type: Some(return_type_str),

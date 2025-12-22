@@ -1,7 +1,7 @@
 use args::{EntityType, RefactorArgs};
-use c_sharp::{codegen::CSharpCodeGenerator, lower_top_level};
+use c_sharp::lower_top_level;
 use clap::Parser as ClapParser;
-use core::{Refactoring, RenameVariable};
+use core::{Refactoring, RenameVariable, TextEdit};
 use std::fs;
 use tree_sitter::Parser;
 
@@ -15,11 +15,9 @@ fn main() {
             let source_code = fs::read_to_string(&cmd.file_path).expect("Unable to read file");
 
             let mut parser = Parser::new();
-
             parser
                 .set_language(tree_sitter_c_sharp::language())
                 .expect("Error loading C# grammar");
-
             let tree = parser.parse(&source_code, None).expect("Error parsing");
             let root = tree.root_node();
 
@@ -29,17 +27,35 @@ fn main() {
                 .find(|n| n.kind() == "class_declaration");
 
             if let Some(node) = class_node {
-                let mut uast = lower_top_level(node, source_code.as_bytes());
+                // Lower to UAST
+                let uast = lower_top_level(node, source_code.as_bytes());
+                
+                // Refactor: Generate Edits
                 let refactoring = RenameVariable::new(&cmd.old_name, &cmd.new_name);
-                refactoring.apply(&mut uast);
+                let edits = refactoring.generate_edits(&uast);
 
-                let mut generator = CSharpCodeGenerator::new("    ");
-                let new_code = generator.generate(&uast);
+                // Patch Source
+                let new_code = apply_edits(&source_code, edits);
+                
                 println!("{}", new_code);
-                _ = fs::write("refactored.cs", new_code);
             } else {
                 eprintln!("No class declaration found in top-level.");
             }
         }
     }
+}
+
+fn apply_edits(source: &str, mut edits: Vec<TextEdit>) -> String {
+    // Sort edits by start position descending to avoid shifting indices
+    edits.sort_by(|a, b| b.start.cmp(&a.start));
+
+    let mut new_source = source.to_string();
+
+    for edit in edits {
+        if edit.end <= new_source.len() && edit.start <= edit.end {
+             new_source.replace_range(edit.start..edit.end, &edit.replacement);
+        }
+    }
+
+    new_source
 }
