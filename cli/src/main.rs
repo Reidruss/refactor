@@ -36,6 +36,7 @@ fn main() {
                 let mut generator = CSharpCodeGenerator::new("    ");
                 let new_code = generator.generate(&uast);
                 println!("{}", new_code);
+                _ = fs::write("refactored.cs", new_code);
             } else {
                 eprintln!("No class declaration found in top-level.");
             }

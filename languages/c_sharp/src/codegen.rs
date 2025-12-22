@@ -38,9 +38,12 @@ impl CSharpCodeGenerator {
 
         output.push_str("class ");
         output.push_str(&class_def.name);
-        output.push_str(" {\n");
+        output.push_str("\n");
 
+        output.push_str(&self.indent());
+        output.push_str("{\n");
         self.indent_level += 1;
+        
         if let Some(body) = &class_def.body {
             for item in body {
                 output.push_str(&self.indent());
@@ -109,8 +112,12 @@ impl CSharpCodeGenerator {
 
     fn generate_block(&mut self, block: &Block) -> String {
         let mut output = String::new();
+
+        output.push('\n');
+        output.push_str(&self.indent());
         output.push_str("{\n");
         self.indent_level += 1;
+
         for stmt in &block.statements {
             output.push_str(&self.indent());
             output.push_str(&self.generate_statement(stmt));
@@ -135,24 +142,22 @@ impl CSharpCodeGenerator {
                     }
                 }
 
-                if let Some(t) = &vars[0].var_type {
-                    output.push_str(t);
+                if let Some(first) = vars.first() {
+                     if let Some(t) = &first.var_type {
+                        output.push_str(t);
+                    }
                 }
                 output.push(' ');
 
-                vars.into_iter().for_each(|var| {
+                for (i, var) in vars.iter().enumerate() {
+                    if i > 0 {
+                        output.push_str(", ");
+                    }
                     output.push_str(&var.name);
-                    output.push_str(", ");
-                });
-
-                // Removing the last ", " in the case of multiple var decls on a single line.
-                // Ex. double length, width, height;
-                output.pop();
-                output.pop();
-
-                if let Some(val) = &vars[0].value {
-                    output.push_str(" = ");
-                    output.push_str(&self.generate_expression(val));
+                    if let Some(val) = &var.value {
+                        output.push_str(" = ");
+                        output.push_str(&self.generate_expression(val));
+                    }
                 }
 
                 output.push(';');
