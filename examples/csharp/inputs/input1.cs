@@ -13,7 +13,7 @@ class Painting
     {
         double width, length, wallArea, ceilingArea;
         string widthString, lengthString;
-        double HEIGHT = 8;
+        double height = 8;
 
         Console.WriteLine ( "Calculation of Room Paint Requirements");
         Console.Write ( "Enter room length: ");
@@ -23,7 +23,7 @@ class Painting
         widthString = Console.ReadLine();
         width = double.Parse(widthString);
 
-        wallArea = 2 * (length + width) * HEIGHT;
+        wallArea = 2 * (length + width) * height;
         ceilingArea = CalculateArea(length, width);
 
         Console.WriteLine("The wall area is " + wallArea
