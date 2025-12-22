@@ -30,7 +30,7 @@ fn extract_parameters(node: Node, source: &[u8]) -> Option<Vec<VarDecl>> {
                     .utf8_text(source)
                     .unwrap()
                     .to_string();
-                
+
                 let name_node = child.named_child(1).unwrap();
                 let name = name_node.utf8_text(source).unwrap().to_string();
 
@@ -232,10 +232,13 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
         }
         "identifier" => {
             let text = node.utf8_text(source).unwrap();
-            Expression::Identifier(text.to_string(), Span {
-                start: node.start_byte(),
-                end: node.end_byte(),
-            })
+            Expression::Identifier(
+                text.to_string(),
+                Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
+            )
         }
         "binary_expression" => {
             let left_node = node

@@ -43,7 +43,7 @@ impl CSharpCodeGenerator {
         output.push_str(&self.indent());
         output.push_str("{\n");
         self.indent_level += 1;
-        
+
         if let Some(body) = &class_def.body {
             for item in body {
                 output.push_str(&self.indent());
@@ -143,7 +143,7 @@ impl CSharpCodeGenerator {
                 }
 
                 if let Some(first) = vars.first() {
-                     if let Some(t) = &first.var_type {
+                    if let Some(t) = &first.var_type {
                         output.push_str(t);
                     }
                 }

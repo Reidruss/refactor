@@ -18,6 +18,7 @@ fn main() {
             parser
                 .set_language(tree_sitter_c_sharp::language())
                 .expect("Error loading C# grammar");
+
             let tree = parser.parse(&source_code, None).expect("Error parsing");
             let root = tree.root_node();
 
@@ -27,17 +28,11 @@ fn main() {
                 .find(|n| n.kind() == "class_declaration");
 
             if let Some(node) = class_node {
-                // Lower to UAST
                 let uast = lower_top_level(node, source_code.as_bytes());
-                
-                // Refactor: Generate Edits
                 let refactoring = RenameVariable::new(&cmd.old_name, &cmd.new_name);
                 let edits = refactoring.generate_edits(&uast);
-
-                // Patch Source
                 let new_code = apply_edits(&source_code, edits);
-                
-                println!("{}", new_code);
+                let _ = fs::write(&cmd.file_path, new_code);
             } else {
                 eprintln!("No class declaration found in top-level.");
             }
@@ -51,11 +46,11 @@ fn apply_edits(source: &str, mut edits: Vec<TextEdit>) -> String {
 
     let mut new_source = source.to_string();
 
-    for edit in edits {
+    edits.into_iter().for_each(|edit| {
         if edit.end <= new_source.len() && edit.start <= edit.end {
-             new_source.replace_range(edit.start..edit.end, &edit.replacement);
+            new_source.replace_range(edit.start..edit.end, &edit.replacement);
         }
-    }
+    });
 
     new_source
 }

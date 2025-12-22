@@ -163,9 +163,15 @@ fn visit_top_level_edits(node: &TopLevel, old: &str, new: &str, edits: &mut Vec<
             if let Some(body) = &func.body {
                 for item in body {
                     match item {
-                        FunctionBodyItems::Block(block) => visit_block_edits(block, old, new, edits),
-                        FunctionBodyItems::TopLevel(tl) => visit_top_level_edits(tl, old, new, edits),
-                        FunctionBodyItems::Expression(expr) => visit_expression_edits(expr, old, new, edits),
+                        FunctionBodyItems::Block(block) => {
+                            visit_block_edits(block, old, new, edits)
+                        }
+                        FunctionBodyItems::TopLevel(tl) => {
+                            visit_top_level_edits(tl, old, new, edits)
+                        }
+                        FunctionBodyItems::Expression(expr) => {
+                            visit_expression_edits(expr, old, new, edits)
+                        }
                     }
                 }
             }
