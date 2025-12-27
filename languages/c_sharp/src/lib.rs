@@ -1,8 +1,6 @@
 use tree_sitter::Node;
 use uast::*;
 
-pub mod codegen;
-
 fn extract_modifiers(node: Node, source: &[u8]) -> Option<Vec<String>> {
     let mut modifiers = Vec::new();
     let mut cursor = node.walk();
@@ -307,6 +305,38 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
                 left: Box::new(lower_expressions(left_node, source)),
                 operator,
                 right: Box::new(lower_expressions(right_node, source)),
+            })
+        }
+        "invocation_expression" => {
+            let function_node = node.child_by_field_name("function").unwrap();
+            let arguments_node = node.child_by_field_name("arguments").unwrap();
+
+            let mut arguments = Vec::new();
+            let mut cursor = arguments_node.walk();
+            for child in arguments_node.children(&mut cursor) {
+                if child.kind() == "argument" {
+                    if let Some(expr_node) = child.named_child(0) {
+                        arguments.push(lower_expressions(expr_node, source));
+                    }
+                }
+            }
+
+            Expression::Invocation(Invocation {
+                function: Box::new(lower_expressions(function_node, source)),
+                arguments,
+            })
+        }
+        "member_access_expression" => {
+            let expression_node = node.child_by_field_name("expression").unwrap();
+            let name_node = node.child_by_field_name("name").unwrap();
+
+            Expression::MemberAccess(MemberAccess {
+                expression: Box::new(lower_expressions(expression_node, source)),
+                member: name_node.utf8_text(source).unwrap().to_string(),
+                member_span: Span {
+                    start: name_node.start_byte(),
+                    end: name_node.end_byte(),
+                },
             })
         }
         "parenthesized_expression" => {

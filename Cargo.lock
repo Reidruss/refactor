@@ -65,6 +65,7 @@ dependencies = [
 name = "c_sharp"
 version = "0.1.0"
 dependencies = [
+ "core",
  "parser",
  "tree-sitter",
  "tree-sitter-c-sharp",

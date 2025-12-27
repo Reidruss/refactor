@@ -113,12 +113,27 @@ pub struct Assignment {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Invocation {
+    pub function: Box<Expression>,
+    pub arguments: Vec<Expression>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MemberAccess {
+    pub expression: Box<Expression>,
+    pub member: String,
+    pub member_span: Span,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Expression {
     Identifier(String, Span),
     Literal(Literal),
     BinaryOp(BinaryOp),
     UnaryOp(UnaryOp),
     Assignment(Assignment),
+    Invocation(Invocation),
+    MemberAccess(MemberAccess),
     Raw { source: String, span: Span },
 }
 

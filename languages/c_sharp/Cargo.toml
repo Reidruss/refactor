@@ -10,3 +10,4 @@ tree-sitter = { workspace = true }
 [dev-dependencies]
 parser = { path = "../../parser" }
 tree-sitter-c-sharp = "0.20.0"
+core = { path = "../../core" }
