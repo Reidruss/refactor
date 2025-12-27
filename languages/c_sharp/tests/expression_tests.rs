@@ -137,14 +137,14 @@ fn test_lower_string_literal() {
 }
 
 #[test]
-fn test_lower_real_literal() {
+fn test_lower_invocation_expression() {
     let language = tree_sitter_c_sharp::language();
     let mut parser = GenericParser::new(language);
-    let code = "123.456";
+    let code = "Console.WriteLine(arg)";
     let tree = parser.parse(code);
     let root = tree.root_node();
 
-    println!("Tree structure for '123.456':");
+    println!("Tree structure for 'Console.WriteLine(arg)':");
     print_tree(root, code, 0);
 
     fn find_node<'a>(node: tree_sitter::Node<'a>, kind: &str) -> Option<tree_sitter::Node<'a>> {
@@ -160,14 +160,36 @@ fn test_lower_real_literal() {
         None
     }
 
-    let literal_node =
-        find_node(root, "real_literal").expect("Could not find integer_literal in the tree");
+    let invocation_node = find_node(root, "invocation_expression")
+        .expect("Could not find invocation_expression in the tree");
 
-    let result = lower_expressions(literal_node, code.as_bytes());
+    let result = lower_expressions(invocation_node, code.as_bytes());
 
-    if let Expression::Literal(Literal::Float(val)) = result {
-        assert_eq!(val, 123.456);
+    if let Expression::Invocation(inv) = result {
+        if let Expression::MemberAccess(ma) = *inv.function {
+            assert_eq!(ma.member, "WriteLine");
+            if let Expression::Identifier(obj, _) = *ma.expression {
+                assert_eq!(obj, "Console");
+            } else {
+                panic!("Expected Identifier for member access expression");
+            }
+        } else {
+            panic!(
+                "Expected MemberAccess for invocation function, got {:?}",
+                inv.function
+            );
+        }
+
+        assert_eq!(inv.arguments.len(), 1);
+        if let Expression::Identifier(arg, _) = &inv.arguments[0] {
+            assert_eq!(arg, "arg");
+        } else {
+            panic!(
+                "Expected Identifier for argument, got {:?}",
+                inv.arguments[0]
+            );
+        }
     } else {
-        panic!("Expected Real Literal, got {:?}", result);
+        panic!("Expected Invocation, got {:?}", result);
     }
 }

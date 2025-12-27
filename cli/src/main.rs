@@ -1,7 +1,7 @@
 use args::{EntityType, RefactorArgs};
 use c_sharp::lower_top_level;
 use clap::Parser as ClapParser;
-use core::{Refactoring, RenameVariable, TextEdit};
+use core::{apply_refactoring, Refactoring, RenameVariable};
 use std::fs;
 use tree_sitter::Parser;
 
@@ -30,27 +30,14 @@ fn main() {
             if let Some(node) = class_node {
                 let uast = lower_top_level(node, source_code.as_bytes());
                 let refactoring = RenameVariable::new(&cmd.old_name, &cmd.new_name);
-                let edits = refactoring.generate_edits(&uast);
-                let new_code = apply_edits(&source_code, edits);
+                let edits = refactoring.apply(&uast);
+                let new_code = apply_refactoring(&source_code, edits);
+
+                // Write to where it came from now, can change later if needed.
                 let _ = fs::write(&cmd.file_path, new_code);
             } else {
                 eprintln!("No class declaration found in top-level.");
             }
         }
     }
-}
-
-fn apply_edits(source: &str, mut edits: Vec<TextEdit>) -> String {
-    // Sort edits by start position descending to avoid shifting indices
-    edits.sort_by(|a, b| b.start.cmp(&a.start));
-
-    let mut new_source = source.to_string();
-
-    edits.into_iter().for_each(|edit| {
-        if edit.end <= new_source.len() && edit.start <= edit.end {
-            new_source.replace_range(edit.start..edit.end, &edit.replacement);
-        }
-    });
-
-    new_source
 }

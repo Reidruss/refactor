@@ -12,18 +12,18 @@ class Painting
     static void Main()
     {
         double width, length, wallArea, ceilingArea;
-        string widthString, lengthString;
-        double height = 8;
+        string widthString, lengthStr;
+        double HEIGHT = 8;
 
         Console.WriteLine ( "Calculation of Room Paint Requirements");
         Console.Write ( "Enter room length: ");
-        lengthString = Console.ReadLine();
-        length = double.Parse(lengthString);
+        lengthStr = Console.ReadLine();
+        length = double.Parse(lengthStr);
         Console.Write( "Enter room width: ");
         widthString = Console.ReadLine();
         width = double.Parse(widthString);
 
-        wallArea = 2 * (length + width) * height;
+        wallArea = 2 * (length + width) * HEIGHT;
         ceilingArea = CalculateArea(length, width);
 
         Console.WriteLine("The wall area is " + wallArea
