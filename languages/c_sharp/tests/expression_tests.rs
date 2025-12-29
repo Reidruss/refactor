@@ -45,7 +45,7 @@ fn test_lower_integer_literal() {
 
     let result = lower_expressions(literal_node, code.as_bytes());
 
-    if let Expression::Literal(Literal::Integer(val)) = result {
+    if let Expression::Literal(Literal::Integer(val), _) = result {
         assert_eq!(val, 123);
     } else {
         panic!("Expected Integer Literal, got {:?}", result);
@@ -84,13 +84,13 @@ fn test_lower_binary_expression() {
     if let Expression::BinaryOp(bin_op) = result {
         assert_eq!(bin_op.operator, BinaryOperator::Add);
 
-        if let Expression::Literal(Literal::Integer(left_val)) = *bin_op.left {
+        if let Expression::Literal(Literal::Integer(left_val), _) = *bin_op.left {
             assert_eq!(left_val, 1);
         } else {
             panic!("Expected left operand to be 1");
         }
 
-        if let Expression::Literal(Literal::Integer(right_val)) = *bin_op.right {
+        if let Expression::Literal(Literal::Integer(right_val), _) = *bin_op.right {
             assert_eq!(right_val, 2);
         } else {
             panic!("Expected right operand to be 2");
@@ -129,7 +129,7 @@ fn test_lower_string_literal() {
 
     let result = lower_expressions(literal_node, code.as_bytes());
 
-    if let Expression::Literal(Literal::String(val)) = result {
+    if let Expression::Literal(Literal::String(val), _) = result {
         assert_eq!(val, "Hello World");
     } else {
         panic!("Expected String Literal, got {:?}", result);

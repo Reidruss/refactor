@@ -1,7 +1,7 @@
 use args::{EntityType, RefactorArgs};
 use c_sharp::lower_top_level;
 use clap::Parser as ClapParser;
-use core::{apply_refactoring, Refactoring, RenameVariable};
+use core::{apply_refactoring, ExtractVariable, Refactoring, RenameVariable, TextEdit};
 use std::fs;
 use tree_sitter::Parser;
 
@@ -23,9 +23,11 @@ fn main() {
             let root = tree.root_node();
 
             let mut cursor = root.walk();
+
             let class_node = root
                 .children(&mut cursor)
                 .find(|n| n.kind() == "class_declaration");
+
 
             if let Some(node) = class_node {
                 let uast = lower_top_level(node, source_code.as_bytes());
@@ -38,6 +40,52 @@ fn main() {
             } else {
                 eprintln!("No class declaration found in top-level.");
             }
+        }
+        EntityType::ExtractVariable(cmd) => {
+            let source_code = fs::read_to_string(&cmd.file_path).expect("unable to read file");
+            
+            // Find the selection range by searching for the string.
+            // In a real IDE context, this would come from the editor selection.
+            if let Some(start_index) = source_code.find(&cmd.extraction_name) {
+                let end_index = start_index + cmd.extraction_name.len();
+                
+                let mut parser = Parser::new();
+                parser
+                    .set_language(tree_sitter_c_sharp::language())
+                    .expect("Error loading C# grammar");
+
+                let tree = parser.parse(&source_code, None).expect("Error parsing");
+                let root = tree.root_node();
+
+                let mut cursor = root.walk();
+
+                let class_node = root
+                    .children(&mut cursor)
+                    .find(|n| n.kind() == "class_declaration");
+
+                if let Some(node) = class_node {
+                    let uast = lower_top_level(node, source_code.as_bytes());
+                    let refactoring = ExtractVariable::new(
+                        start_index, 
+                        end_index, 
+                        &cmd.new_name, 
+                        &source_code
+                    );
+                    let edits = refactoring.apply(&uast);
+                    if edits.is_empty() {
+                         eprintln!("Could not extract variable. Selection might not match a valid expression.");
+                    } else {
+                        let new_code = apply_refactoring(&source_code, edits);
+                        // Write to where it came from now, can change later if needed.
+                        let _ = fs::write(&cmd.file_path, new_code);
+                    }
+                } else {
+                    eprintln!("No class declaration found in top-level.");
+                }
+            } else {
+                eprintln!("Could not find string '{}' in file.", cmd.extraction_name);
+            }
+
         }
     }
 }

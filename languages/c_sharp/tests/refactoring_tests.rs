@@ -1,5 +1,5 @@
 use c_sharp::lower_top_level;
-use core::{apply_refactoring, Refactoring, RenameVariable};
+use core::{apply_refactoring, ExtractVariable, Refactoring, RenameVariable};
 use tree_sitter::Parser;
 
 fn run_test(source_code: &str, old_name: &str, new_name: &str, expected_code: &str) {
@@ -20,6 +20,33 @@ fn run_test(source_code: &str, old_name: &str, new_name: &str, expected_code: &s
     let uast = lower_top_level(class_node, source_code.as_bytes());
 
     let refactoring = RenameVariable::new(old_name, new_name);
+    let edits = refactoring.apply(&uast);
+    let new_code = apply_refactoring(source_code, edits);
+
+    assert_eq!(new_code, expected_code);
+}
+
+fn run_extract_test(source_code: &str, extraction_str: &str, new_name: &str, expected_code: &str) {
+    let mut parser = Parser::new();
+    parser
+        .set_language(tree_sitter_c_sharp::language())
+        .expect("Error loading C# grammar");
+    let tree = parser.parse(source_code, None).unwrap();
+    let root = tree.root_node();
+
+    // Find class declaration
+    let mut cursor = root.walk();
+    let class_node = root
+        .children(&mut cursor)
+        .find(|n| n.kind() == "class_declaration")
+        .expect("No class declaration found in test source");
+
+    let uast = lower_top_level(class_node, source_code.as_bytes());
+
+    let start = source_code.find(extraction_str).expect("Extraction string not found");
+    let end = start + extraction_str.len();
+
+    let refactoring = ExtractVariable::new(start, end, new_name, source_code);
     let edits = refactoring.apply(&uast);
     let new_code = apply_refactoring(source_code, edits);
 
@@ -94,4 +121,20 @@ fn test_rename_object_in_member_access() {
     }
 }"#;
     run_test(source, "Console", "MyConsole", expected);
+}
+
+#[test]
+fn test_extract_variable_basic() {
+    let source = r#"public class Test {
+    public void Run() {
+        int x = 5 + 10;
+    }
+}"#;
+    let expected = r#"public class Test {
+    public void Run() {
+        var sum = 5 + 10;
+        int x = sum;
+    }
+}"#;
+    run_extract_test(source, "5 + 10", "sum", expected);
 }

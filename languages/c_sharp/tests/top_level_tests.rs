@@ -62,7 +62,7 @@ fn test_lower_class_with_method() {
                 match &block.statements[0] {
                     Statement::ReturnStatement(ret) => {
                         if let Some(val) = &ret.value {
-                            if let Expression::Literal(Literal::Integer(i)) = **val {
+                            if let Expression::Literal(Literal::Integer(i), _) = **val {
                                 assert_eq!(i, 5);
                             } else {
                                 panic!("Expected integer literal 5");

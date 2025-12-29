@@ -1,6 +1,6 @@
 use c_sharp::lower_statement;
 use parser::GenericParser;
-use uast::{Expression, Literal, Statement};
+use uast::{Expression, Literal, Span, Statement};
 
 #[test]
 fn test_lower_variable_declaration() {
@@ -28,7 +28,10 @@ fn test_lower_variable_declaration() {
 
         assert_eq!(
             decl.value,
-            Some(Box::new(Expression::Literal(Literal::Float(5.0))))
+            Some(Box::new(Expression::Literal(
+                Literal::Float(5.0),
+                Span { start: 17, end: 20 }
+            )))
         );
     } else {
         panic!("Expected a DeclStmt, but got {:?}", result);
@@ -50,7 +53,10 @@ fn test_lower_if_statement() {
     if let Statement::IfStatement(if_stmt) = result {
         assert_eq!(
             if_stmt.condition,
-            Box::new(Expression::Literal(Literal::Boolean(true)))
+            Box::new(Expression::Literal(
+                Literal::Boolean(true),
+                Span { start: 4, end: 8 }
+            ))
         );
         assert_eq!(if_stmt.alternative, None);
         assert_eq!(if_stmt.span.start, 0);
@@ -64,7 +70,10 @@ fn test_lower_if_statement() {
             assert_eq!(var_decl.var_type, Some("int".to_string()));
             assert_eq!(
                 var_decl.value,
-                Some(Box::new(Expression::Literal(Literal::Integer(1))))
+                Some(Box::new(Expression::Literal(
+                    Literal::Integer(1),
+                    Span { start: 20, end: 21 }
+                )))
             );
         } else {
             panic!(
@@ -94,7 +103,10 @@ fn test_lower_if_else_statement() {
     if let Statement::IfStatement(if_stmt) = result {
         assert_eq!(
             if_stmt.condition,
-            Box::new(Expression::Literal(Literal::Boolean(false)))
+            Box::new(Expression::Literal(
+                Literal::Boolean(false),
+                Span { start: 4, end: 9 }
+            ))
         );
         assert_eq!(if_stmt.span.start, 0);
         assert_eq!(if_stmt.span.end, 45); // Span for "if (false) { int y = 2; } else { int z = 3; }"
@@ -107,7 +119,10 @@ fn test_lower_if_else_statement() {
             assert_eq!(var_decl.var_type, Some("int".to_string()));
             assert_eq!(
                 var_decl.value,
-                Some(Box::new(Expression::Literal(Literal::Integer(2))))
+                Some(Box::new(Expression::Literal(
+                    Literal::Integer(2),
+                    Span { start: 21, end: 22 }
+                )))
             );
         } else {
             panic!(
@@ -126,7 +141,10 @@ fn test_lower_if_else_statement() {
                 assert_eq!(var_decl.var_type, Some("int".to_string()));
                 assert_eq!(
                     var_decl.value,
-                    Some(Box::new(Expression::Literal(Literal::Integer(3))))
+                    Some(Box::new(Expression::Literal(
+                        Literal::Integer(3),
+                        Span { start: 41, end: 42 }
+                    )))
                 );
             } else {
                 panic!(

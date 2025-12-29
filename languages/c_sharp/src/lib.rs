@@ -207,12 +207,24 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
         "integer_literal" => {
             let text = node.utf8_text(source).unwrap();
             let value = text.parse::<i64>().unwrap_or(0);
-            Expression::Literal(Literal::Integer(value))
+            Expression::Literal(
+                Literal::Integer(value),
+                Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
+            )
         }
         "real_literal" => {
             let text = node.utf8_text(source).unwrap();
             let value = text.parse::<f64>().unwrap_or(0.0);
-            Expression::Literal(Literal::Float(value))
+            Expression::Literal(
+                Literal::Float(value),
+                Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
+            )
         }
         "string_literal" => {
             let text = node.utf8_text(source).unwrap();
@@ -221,12 +233,24 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
             } else {
                 text
             };
-            Expression::Literal(Literal::String(content.to_string()))
+            Expression::Literal(
+                Literal::String(content.to_string()),
+                Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
+            )
         }
         "boolean_literal" => {
             let text = node.utf8_text(source).unwrap();
             let val = text == "true";
-            Expression::Literal(Literal::Boolean(val))
+            Expression::Literal(
+                Literal::Boolean(val),
+                Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
+            )
         }
         "identifier" => {
             let text = node.utf8_text(source).unwrap();
@@ -268,6 +292,10 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
                 left: Box::new(lower_expressions(left_node, source)),
                 operator,
                 right: Box::new(lower_expressions(right_node, source)),
+                span: Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
             })
         }
         "assignment_expression" => {
@@ -305,6 +333,10 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
                 left: Box::new(lower_expressions(left_node, source)),
                 operator,
                 right: Box::new(lower_expressions(right_node, source)),
+                span: Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
             })
         }
         "invocation_expression" => {
@@ -324,6 +356,10 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
             Expression::Invocation(Invocation {
                 function: Box::new(lower_expressions(function_node, source)),
                 arguments,
+                span: Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
+                },
             })
         }
         "member_access_expression" => {
@@ -336,6 +372,10 @@ pub fn lower_expressions(node: Node, source: &[u8]) -> Expression {
                 member_span: Span {
                     start: name_node.start_byte(),
                     end: name_node.end_byte(),
+                },
+                span: Span {
+                    start: node.start_byte(),
+                    end: node.end_byte(),
                 },
             })
         }

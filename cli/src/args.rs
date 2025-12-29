@@ -11,6 +11,9 @@ pub struct RefactorArgs {
 pub enum EntityType {
     /// Renames a variable in the specified file
     RenameVariable(RenameVariableCommand),
+
+    // Extracts a variable and uses a new temp variable in its place
+    ExtractVariable(ExtractVariableCommand),
 }
 
 #[derive(Debug, Args)]
@@ -20,6 +23,18 @@ pub struct RenameVariableCommand {
 
     /// Old variable name
     pub old_name: String,
+
+    /// New variable name
+    pub new_name: String,
+}
+
+#[derive(Debug, Args)]
+pub struct ExtractVariableCommand {
+    /// File path of target file
+    pub file_path: String,
+
+    /// Variable name to extract
+    pub extraction_name: String,
 
     /// New variable name
     pub new_name: String,

@@ -97,12 +97,14 @@ pub struct BinaryOp {
     pub left: Box<Expression>,
     pub operator: BinaryOperator,
     pub right: Box<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UnaryOp {
     pub operator: UnaryOperator,
     pub operand: Box<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -110,12 +112,14 @@ pub struct Assignment {
     pub left: Box<Expression>,
     pub operator: AssignmentOperator,
     pub right: Box<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Invocation {
     pub function: Box<Expression>,
     pub arguments: Vec<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -123,12 +127,13 @@ pub struct MemberAccess {
     pub expression: Box<Expression>,
     pub member: String,
     pub member_span: Span,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Expression {
     Identifier(String, Span),
-    Literal(Literal),
+    Literal(Literal, Span),
     BinaryOp(BinaryOp),
     UnaryOp(UnaryOp),
     Assignment(Assignment),

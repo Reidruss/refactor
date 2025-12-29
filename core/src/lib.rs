@@ -2,9 +2,11 @@ use uast::TopLevel;
 
 pub mod refactorings {
     pub mod rename_variable;
+    pub mod extract_variable;
 }
 
 pub use refactorings::rename_variable::RenameVariable;
+pub use refactorings::extract_variable::ExtractVariable;
 
 #[derive(Debug, Clone)]
 pub struct TextEdit {
