@@ -43,14 +43,76 @@ fn run_extract_test(source_code: &str, extraction_str: &str, new_name: &str, exp
 
     let uast = lower_top_level(class_node, source_code.as_bytes());
 
-    let start = source_code.find(extraction_str).expect("Extraction string not found");
-    let end = start + extraction_str.len();
+    let mut found = false;
+    let mut new_code = String::new();
 
-    let refactoring = ExtractVariable::new(start, end, new_name, source_code);
-    let edits = refactoring.apply(&uast);
-    let new_code = apply_refactoring(source_code, edits);
+    // Iterate through all matches to find the valid one, emulating the CLI logic
+    for (start, _) in source_code.match_indices(extraction_str) {
+        let end = start + extraction_str.len();
+        let refactoring = ExtractVariable::new(start, end, new_name, source_code);
+        let edits = refactoring.apply(&uast);
+        if !edits.is_empty() {
+            new_code = apply_refactoring(source_code, edits);
+            found = true;
+            break;
+        }
+    }
+
+    if !found {
+        panic!(
+            "Could not find a valid expression match for '{}'",
+            extraction_str
+        );
+    }
 
     assert_eq!(new_code, expected_code);
+}
+
+#[test]
+fn test_extract_variable_with_comment_collision() {
+    let source = r#"public class OrderCalculator
+{
+    public double CalculateFinalPrice(double price, int quantity, double discount, double shipping)
+    {
+        // The Target: "(price * quantity) - discount + shipping"
+        // This expression calculates the total cost, but it's unnamed logic.
+        if ((price * quantity) - discount + shipping > 1000.0)
+        {
+            Console.WriteLine("This is a high-value order.");
+        }
+
+        return (price * quantity) - discount + shipping;
+    }
+}"#;
+
+    // Note: The extraction currently only targets the first match that works.
+    // In this case, it should find the one inside the IF condition first (if traversal order allows) or the one in return?
+    // Wait, the match_indices iterates linearly.
+    // 1. Comment -> No edits.
+    // 2. IF condition -> Edits!
+    // So it should extract the one in the IF condition.
+
+    let expected = r#"public class OrderCalculator
+{
+    public double CalculateFinalPrice(double price, int quantity, double discount, double shipping)
+    {
+        // The Target: "(price * quantity) - discount + shipping"
+        // This expression calculates the total cost, but it's unnamed logic.
+        var value = (price * quantity) - discount + shipping;
+        if (value > 1000.0)
+        {
+            Console.WriteLine("This is a high-value order.");
+        }
+
+        return (price * quantity) - discount + shipping;
+    }
+}"#;
+    run_extract_test(
+        source,
+        "(price * quantity) - discount + shipping",
+        "value",
+        expected,
+    );
 }
 
 #[test]

@@ -66,18 +66,15 @@ fn visit_top_level(
                             visit_top_level(tl, start, end, new_name, source, edits)
                         }
                         FunctionBodyItems::Expression(expr) => {
-                            // If an expression is a body item, it's effectively a statement (expression statement)
-                            // We treat it as such.
                             let span = get_expression_span(expr);
                             if let Some(span) = span {
                                 if span.start <= start && span.end >= end {
-                                     if find_expression_in_expression(expr, start, end).is_some() {
-                                          // Found it inside this expression "statement"
-                                          // Insert before this expression.
-                                          insert_declaration(span.start, start, end, new_name, source, edits);
-                                          // Replace the expression instance
-                                          replace_expression(expr, start, end, new_name, edits);
-                                     }
+                                    if find_expression_in_expression(expr, start, end).is_some() {
+                                        insert_declaration(
+                                            span.start, start, end, new_name, source, edits,
+                                        );
+                                        replace_expression(expr, start, end, new_name, edits);
+                                    }
                                 }
                             }
                         }
@@ -86,19 +83,15 @@ fn visit_top_level(
             }
         }
         TopLevel::Statement(stmt) => {
-             // Check if selection is inside statement
-             let stmt_span = get_statement_span(stmt);
-             if let Some(span) = stmt_span {
-                 if span.start <= start && span.end >= end {
-                     // Potential candidate.
-                     // Check if we can find the exact expression inside.
-                     if find_expression_in_statement(stmt, start, end) {
-                         // Found it!
-                         insert_declaration(span.start, start, end, new_name, source, edits);
-                         replace_in_statement(stmt, start, end, new_name, edits);
-                     }
-                 }
-             }
+            let stmt_span = get_statement_span(stmt);
+            if let Some(span) = stmt_span {
+                if span.start <= start && span.end >= end {
+                    if find_expression_in_statement(stmt, start, end) {
+                        insert_declaration(span.start, start, end, new_name, source, edits);
+                        replace_in_statement(stmt, start, end, new_name, edits);
+                    }
+                }
+            }
         }
         TopLevel::Module(mod_def) => {
             for item in &mod_def.body {
@@ -124,7 +117,7 @@ fn visit_block(
                 if find_expression_in_statement(stmt, start, end) {
                     insert_declaration(span.start, start, end, new_name, source, edits);
                     replace_in_statement(stmt, start, end, new_name, edits);
-                    return; // Stop after finding one match
+                    return;
                 }
             }
         }
@@ -139,19 +132,18 @@ fn get_statement_span(stmt: &Statement) -> Option<Span> {
         Statement::ForLoop(s) => Some(s.span.clone()),
         Statement::Unknown { span, .. } => Some(span.clone()),
         Statement::DeclStmt(s) => {
-            // DeclStmt doesn't have a span field in struct, need to infer?
-            // Wait, I didn't add span to DeclStmt struct in uast.
-            // But I can guess from var_decls
-             if let Some(first) = s.var_decls.first() {
-                 if let Some(last) = s.var_decls.last() {
-                     return Some(Span { start: first.span.start, end: last.span.end });
-                 }
-             }
-             None
+            if let Some(first) = s.var_decls.first() {
+                if let Some(last) = s.var_decls.last() {
+                    return Some(Span {
+                        start: first.span.start,
+                        end: last.span.end,
+                    });
+                }
+            }
+            None
         }
         Statement::ReturnStatement(s) => {
-             // ReturnStatement doesn't have span either.
-             s.value.as_ref().and_then(|v| get_expression_span(v))
+            s.value.as_ref().and_then(|v| get_expression_span(v))
         }
     }
 }
@@ -171,7 +163,9 @@ fn get_expression_span(expr: &Expression) -> Option<Span> {
 
 fn find_expression_in_statement(stmt: &Statement, start: usize, end: usize) -> bool {
     match stmt {
-        Statement::ExpressionStatement(s) => find_expression_in_expression(&s.expression, start, end).is_some(),
+        Statement::ExpressionStatement(s) => {
+            find_expression_in_expression(&s.expression, start, end).is_some()
+        }
         Statement::DeclStmt(s) => {
             for var in &s.var_decls {
                 if let Some(val) = &var.value {
@@ -186,13 +180,6 @@ fn find_expression_in_statement(stmt: &Statement, start: usize, end: usize) -> b
             if find_expression_in_expression(&s.condition, start, end).is_some() {
                 return true;
             }
-            // Note: Recursing into blocks is handled by visit_block at top level, 
-            // but here we are checking if the statement *contains* the expression to trigger insertion *before* the statement.
-            // If the expression is deep inside the block, we don't want to insert before the IF statement.
-            // We want to insert inside the block.
-            // So we should NOT return true if it's in the block.
-            // visit_top_level recurses into children.
-            // find_expression_in_statement is only checking "direct" children expressions that would warrant insertion before THIS statement.
             false
         }
         Statement::ReturnStatement(s) => {
@@ -203,63 +190,71 @@ fn find_expression_in_statement(stmt: &Statement, start: usize, end: usize) -> b
             }
         }
         Statement::WhileLoop(s) => {
-             if find_expression_in_expression(&s.condition, start, end).is_some() {
-                 return true;
-             }
-             false
+            if find_expression_in_expression(&s.condition, start, end).is_some() {
+                return true;
+            }
+            false
         }
         Statement::ForLoop(s) => {
-             if let Some(init) = &s.initializer {
-                 if find_expression_in_statement(init, start, end) {
-                     return true;
-                 }
-             }
-             if let Some(cond) = &s.condition {
-                 if find_expression_in_expression(cond, start, end).is_some() {
-                     return true;
-                 }
-             }
-             if let Some(update) = &s.update {
-                 if find_expression_in_expression(update, start, end).is_some() {
-                     return true;
-                 }
-             }
-             false
+            if let Some(init) = &s.initializer {
+                if find_expression_in_statement(init, start, end) {
+                    return true;
+                }
+            }
+            if let Some(cond) = &s.condition {
+                if find_expression_in_expression(cond, start, end).is_some() {
+                    return true;
+                }
+            }
+            if let Some(update) = &s.update {
+                if find_expression_in_expression(update, start, end).is_some() {
+                    return true;
+                }
+            }
+            false
         }
         _ => false,
     }
 }
 
-fn find_expression_in_expression(expr: &Expression, start: usize, end: usize) -> Option<&Expression> {
+fn find_expression_in_expression(
+    expr: &Expression,
+    start: usize,
+    end: usize,
+) -> Option<&Expression> {
     let span = get_expression_span(expr)?;
     if span.start == start && span.end == end {
         return Some(expr);
     }
-    
-    // Check children
+
     match expr {
-        Expression::BinaryOp(op) => {
-            find_expression_in_expression(&op.left, start, end)
-                .or_else(|| find_expression_in_expression(&op.right, start, end))
-        }
+        Expression::BinaryOp(op) => find_expression_in_expression(&op.left, start, end)
+            .or_else(|| find_expression_in_expression(&op.right, start, end)),
         Expression::UnaryOp(op) => find_expression_in_expression(&op.operand, start, end),
-        Expression::Assignment(op) => {
-            find_expression_in_expression(&op.left, start, end)
-                .or_else(|| find_expression_in_expression(&op.right, start, end))
-        }
-        Expression::Invocation(op) => {
-            find_expression_in_expression(&op.function, start, end).or_else(|| {
-                op.arguments.iter().find_map(|arg| find_expression_in_expression(arg, start, end))
-            })
-        }
+        Expression::Assignment(op) => find_expression_in_expression(&op.left, start, end)
+            .or_else(|| find_expression_in_expression(&op.right, start, end)),
+        Expression::Invocation(op) => find_expression_in_expression(&op.function, start, end)
+            .or_else(|| {
+                op.arguments
+                    .iter()
+                    .find_map(|arg| find_expression_in_expression(arg, start, end))
+            }),
         Expression::MemberAccess(op) => find_expression_in_expression(&op.expression, start, end),
         _ => None,
     }
 }
 
-fn replace_in_statement(stmt: &Statement, start: usize, end: usize, new_name: &str, edits: &mut Vec<TextEdit>) {
-     match stmt {
-        Statement::ExpressionStatement(s) => replace_expression(&s.expression, start, end, new_name, edits),
+fn replace_in_statement(
+    stmt: &Statement,
+    start: usize,
+    end: usize,
+    new_name: &str,
+    edits: &mut Vec<TextEdit>,
+) {
+    match stmt {
+        Statement::ExpressionStatement(s) => {
+            replace_expression(&s.expression, start, end, new_name, edits)
+        }
         Statement::DeclStmt(s) => {
             for var in &s.var_decls {
                 if let Some(val) = &var.value {
@@ -275,23 +270,33 @@ fn replace_in_statement(stmt: &Statement, start: usize, end: usize, new_name: &s
         }
         Statement::WhileLoop(s) => replace_expression(&s.condition, start, end, new_name, edits),
         Statement::ForLoop(s) => {
-             if let Some(init) = &s.initializer {
-                 replace_in_statement(init, start, end, new_name, edits);
-             }
-             if let Some(cond) = &s.condition {
-                 replace_expression(cond, start, end, new_name, edits);
-             }
-             if let Some(update) = &s.update {
-                 replace_expression(update, start, end, new_name, edits);
-             }
+            if let Some(init) = &s.initializer {
+                replace_in_statement(init, start, end, new_name, edits);
+            }
+            if let Some(cond) = &s.condition {
+                replace_expression(cond, start, end, new_name, edits);
+            }
+            if let Some(update) = &s.update {
+                replace_expression(update, start, end, new_name, edits);
+            }
         }
         _ => {}
     }
 }
 
-fn replace_expression(expr: &Expression, start: usize, end: usize, new_name: &str, edits: &mut Vec<TextEdit>) {
-    let span = if let Some(s) = get_expression_span(expr) { s } else { return };
-    
+fn replace_expression(
+    expr: &Expression,
+    start: usize,
+    end: usize,
+    new_name: &str,
+    edits: &mut Vec<TextEdit>,
+) {
+    let span = if let Some(s) = get_expression_span(expr) {
+        s
+    } else {
+        return;
+    };
+
     if span.start == start && span.end == end {
         edits.push(TextEdit {
             start,
@@ -300,7 +305,7 @@ fn replace_expression(expr: &Expression, start: usize, end: usize, new_name: &st
         });
         return;
     }
-    
+
     match expr {
         Expression::BinaryOp(op) => {
             replace_expression(&op.left, start, end, new_name, edits);
@@ -317,7 +322,9 @@ fn replace_expression(expr: &Expression, start: usize, end: usize, new_name: &st
                 replace_expression(arg, start, end, new_name, edits);
             }
         }
-        Expression::MemberAccess(op) => replace_expression(&op.expression, start, end, new_name, edits),
+        Expression::MemberAccess(op) => {
+            replace_expression(&op.expression, start, end, new_name, edits)
+        }
         _ => {}
     }
 }
@@ -330,24 +337,22 @@ fn insert_declaration(
     source: &str,
     edits: &mut Vec<TextEdit>,
 ) {
-    // Determine indentation
-    // Find the start of the line containing stmt_start
     let mut line_start = stmt_start;
     while line_start > 0 && source.as_bytes()[line_start - 1] != b'\n' {
         line_start -= 1;
     }
     let indentation = &source[line_start..stmt_start];
-    
-    // Extract expression text
-    if expr_end > source.len() { return; }
+
+    if expr_end > source.len() {
+        return;
+    }
     let expr_text = &source[expr_start..expr_end];
-    
+
     let decl = format!("var {} = {};\n{}", new_name, expr_text, indentation);
-    
+
     edits.push(TextEdit {
         start: stmt_start,
         end: stmt_start,
         replacement: decl,
     });
 }
-
